@@ -24,6 +24,7 @@ local UserInputService = game:GetService("UserInputService")
 local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local StatsService = game:GetService("Stats")
+local HttpService = game:GetService("HttpService")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -50,6 +51,12 @@ Library.Theme = {
 local Theme = Library.Theme
 local FONT = Enum.Font.Gotham
 local FONT_BOLD = Enum.Font.GothamSemibold
+
+-- Branding image shown in the loader topbar, the window topbar and the launcher orb.
+-- Upload your logo (e.g. the galaxy "Y") in Studio and paste its rbxassetid here. While it
+-- is empty the library falls back to the "sparkles" icon so nothing looks broken.
+-- Unlike the monochrome icons this is drawn in full colour, so artwork keeps its own look.
+Library.Logo = ""
 
 -- After uploading your icons (see /icons, GitHub link, Studio asset upload), fill in the
 -- matching rbxassetid here, e.g. home = "rbxassetid://123456789".
@@ -121,6 +128,72 @@ end
 -- ============ Icon system ============
 -- Uses an uploaded rbxassetid if one is set, otherwise falls back to a clean monogram.
 
+-- Draws the monogram fallback (ring + first letter) into `holder`.
+local function drawMonogram(holder, size, color, name)
+	local ringFrame = Instance.new("Frame")
+	ringFrame.Name = "Monogram"
+	ringFrame.BackgroundTransparency = 1
+	ringFrame.Size = UDim2.fromScale(1, 1)
+	ringFrame.Parent = holder
+	corner(ringFrame, "circle")
+	local s = Instance.new("UIStroke")
+	s.Color = color
+	s.Thickness = math.max(1, size * 0.08)
+	s.Transparency = 0.15
+	s.Parent = ringFrame
+
+	local letter = Instance.new("TextLabel")
+	letter.BackgroundTransparency = 1
+	letter.Size = UDim2.fromScale(1, 1)
+	letter.Font = FONT_BOLD
+	letter.TextScaled = true
+	letter.TextColor3 = color
+	letter.Text = (name or "?"):sub(1, 1):upper()
+	letter.Parent = ringFrame
+	local pad = Instance.new("UIPadding")
+	pad.PaddingTop = UDim.new(0, size * 0.22)
+	pad.PaddingBottom = UDim.new(0, size * 0.22)
+	pad.Parent = letter
+	return ringFrame
+end
+
+-- Branding mark. Uses Library.Logo in full colour when set, otherwise the tinted
+-- "sparkles" icon, so the UI is never left with an empty corner.
+function Library.GetLogo(parent, size, fallbackColor)
+	if Library.Logo and Library.Logo ~= "" then
+		local holder = Instance.new("Frame")
+		holder.BackgroundTransparency = 1
+		holder.Size = UDim2.fromOffset(size, size)
+		holder.Parent = parent
+
+		local img = Instance.new("ImageLabel")
+		img.Name = "Logo"
+		img.BackgroundTransparency = 1
+		img.Size = UDim2.fromScale(1, 1)
+		img.Image = Library.Logo
+		img.ScaleType = Enum.ScaleType.Fit
+		img.Parent = holder
+
+		task.spawn(function()
+			local waited = 0
+			while waited < 5 do
+				if not img.Parent then return end
+				if img.IsLoaded then return end
+				task.wait(0.25)
+				waited += 0.25
+			end
+			if img.Parent and not img.IsLoaded then
+				img:Destroy()
+				Library.GetIcon(holder, size, fallbackColor or Theme.Cyan, "sparkles")
+			end
+		end)
+
+		return holder
+	end
+
+	return Library.GetIcon(parent, size, fallbackColor or Theme.Cyan, "sparkles")
+end
+
 function Library.GetIcon(parent, size, color, name, spin)
 	local holder = Instance.new("Frame")
 	holder.BackgroundTransparency = 1
@@ -130,35 +203,32 @@ function Library.GetIcon(parent, size, color, name, spin)
 	local assetId = Library.IconAssets[name]
 	if assetId and assetId ~= "" then
 		local img = Instance.new("ImageLabel")
+		img.Name = "Icon"
 		img.BackgroundTransparency = 1
 		img.Size = UDim2.fromScale(1, 1)
 		img.Image = assetId
 		img.ImageColor3 = color
 		img.Parent = holder
-	else
-		local ringFrame = Instance.new("Frame")
-		ringFrame.BackgroundTransparency = 1
-		ringFrame.Size = UDim2.fromScale(1, 1)
-		ringFrame.Parent = holder
-		corner(ringFrame, "circle")
-		local s = Instance.new("UIStroke")
-		s.Color = color
-		s.Thickness = math.max(1, size * 0.08)
-		s.Transparency = 0.15
-		s.Parent = ringFrame
 
-		local letter = Instance.new("TextLabel")
-		letter.BackgroundTransparency = 1
-		letter.Size = UDim2.fromScale(1, 1)
-		letter.Font = FONT_BOLD
-		letter.TextScaled = true
-		letter.TextColor3 = color
-		letter.Text = (name or "?"):sub(1, 1):upper()
-		letter.Parent = ringFrame
-		local pad = Instance.new("UIPadding")
-		pad.PaddingTop = UDim.new(0, size * 0.22)
-		pad.PaddingBottom = UDim.new(0, size * 0.22)
-		pad.Parent = letter
+		-- An asset ID can be valid yet still never render (most commonly a Decal ID where
+		-- an Image ID is required, or one still awaiting moderation). Rather than leaving a
+		-- blank gap in the UI, wait for the load and quietly swap in the monogram if it
+		-- never arrives.
+		task.spawn(function()
+			local waited = 0
+			while waited < 5 do
+				if not img.Parent then return end
+				if img.IsLoaded then return end
+				task.wait(0.25)
+				waited += 0.25
+			end
+			if img.Parent and not img.IsLoaded then
+				img:Destroy()
+				drawMonogram(holder, size, color, name)
+			end
+		end)
+	else
+		drawMonogram(holder, size, color, name)
 	end
 
 	if spin then
@@ -339,6 +409,12 @@ function Library.CreateWindow(opts)
 	Window.ZIndex = 4
 	Window.Parent = screenGui
 	corner(Window, 10)
+
+	-- Open/close animate this instead of Size: tweening Size reflows every child layout
+	-- each frame, which is what made the old close read as a jerky "collapse".
+	local windowScale = Instance.new("UIScale")
+	windowScale.Parent = Window
+
 	local windowStroke = Instance.new("UIStroke")
 	windowStroke.Thickness = 1.4
 	windowStroke.Color = Theme.Violet
@@ -372,7 +448,7 @@ function Library.CreateWindow(opts)
 	titleIconHolder.Size = UDim2.fromOffset(20, 20)
 	titleIconHolder.ZIndex = 6
 	titleIconHolder.Parent = Topbar
-	Library.GetIcon(titleIconHolder, 20, Theme.Cyan, "sparkles")
+	Library.GetLogo(titleIconHolder, 20, Theme.Cyan)
 
 	local Title = Instance.new("TextLabel")
 	Title.BackgroundTransparency = 1
@@ -411,7 +487,7 @@ function Library.CreateWindow(opts)
 	Launcher.Parent = screenGui
 	corner(Launcher, "circle")
 	faintStroke(Launcher, 0.4)
-	addPressFeel(Launcher, 1.1)
+	local launcherScale = addPressFeel(Launcher, 1.1)
 	local launcherIconHolder = Instance.new("Frame")
 	launcherIconHolder.BackgroundTransparency = 1
 	launcherIconHolder.AnchorPoint = Vector2.new(0.5, 0.5)
@@ -419,7 +495,7 @@ function Library.CreateWindow(opts)
 	launcherIconHolder.Size = UDim2.fromOffset(22, 22)
 	launcherIconHolder.ZIndex = 11
 	launcherIconHolder.Parent = Launcher
-	Library.GetIcon(launcherIconHolder, 22, Theme.Cyan, "sparkles")
+	Library.GetLogo(launcherIconHolder, 22, Theme.Cyan)
 
 	local windowVisible = true
 	local function setWindowVisible(visible, animate)
@@ -428,17 +504,32 @@ function Library.CreateWindow(opts)
 			Launcher.Visible = false
 			Window.Visible = true
 			if animate then
-				Window.Size = UDim2.fromOffset(FULL_SIZE.X.Offset - 30, FULL_SIZE.Y.Offset - 30)
+				windowScale.Scale = 0.88
 				Window.BackgroundTransparency = 1
-				tween(Window, { Size = FULL_SIZE, BackgroundTransparency = 0 }, 0.3, Enum.EasingStyle.Back)
+				windowStroke.Transparency = 1
+				tween(windowScale, { Scale = 1 }, 0.38, Enum.EasingStyle.Back)
+				tween(Window, { BackgroundTransparency = 0 }, 0.22)
+				tween(windowStroke, { Transparency = 0 }, 0.3)
+			else
+				windowScale.Scale = 1
+				Window.BackgroundTransparency = 0
+				windowStroke.Transparency = 0
 			end
 		else
 			if animate then
-				tween(Window, { BackgroundTransparency = 1, Size = UDim2.fromOffset(FULL_SIZE.X.Offset - 30, FULL_SIZE.Y.Offset - 30) }, 0.2)
+				tween(windowScale, { Scale = 0.9 }, 0.2, Enum.EasingStyle.Quad)
+				tween(Window, { BackgroundTransparency = 1 }, 0.2)
+				tween(windowStroke, { Transparency = 1 }, 0.16)
 				task.delay(0.2, function()
 					Window.Visible = false
+					windowScale.Scale = 1
+					Window.BackgroundTransparency = 0
+					windowStroke.Transparency = 0
+
 					Launcher.Visible = true
+					launcherScale.Scale = 0.6
 					Launcher.BackgroundTransparency = 1
+					tween(launcherScale, { Scale = 1 }, 0.34, Enum.EasingStyle.Back)
 					tween(Launcher, { BackgroundTransparency = 0 }, 0.2)
 				end)
 			else
@@ -498,8 +589,21 @@ function Library.CreateWindow(opts)
 	addPressFeel(UnloadBtn, 1.15)
 
 	local function doUnload()
-		tween(Window, { BackgroundTransparency = 1, Size = UDim2.fromOffset(Window.AbsoluteSize.X - 60, Window.AbsoluteSize.Y - 60) }, 0.25)
-		task.delay(0.25, function() screenGui:Destroy() end)
+		-- Everything leaves together: window shrinks away, the stats pill and launcher orb
+		-- fade with it, so nothing is left hanging on screen mid-animation.
+		tween(windowScale, { Scale = 0.82 }, 0.26, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+		tween(Window, { BackgroundTransparency = 1 }, 0.26)
+		tween(windowStroke, { Transparency = 1 }, 0.2)
+
+		-- Walked from the ScreenGui rather than named directly: the overlay and pill are
+		-- built further down this function, so naming them here would capture nil.
+		for _, obj in ipairs(screenGui:GetChildren()) do
+			if obj ~= Window and obj:IsA("GuiObject") and obj.Visible then
+				tween(obj, { BackgroundTransparency = 1 }, 0.2)
+			end
+		end
+
+		task.delay(0.3, function() screenGui:Destroy() end)
 	end
 
 	UnloadBtn.MouseEnter:Connect(function() tween(UnloadBtn, { TextColor3 = Theme.Bad }, 0.15) end)
@@ -557,15 +661,16 @@ function Library.CreateWindow(opts)
 	-- UIListLayout keeps everything from overlapping (auto-flowing layout instead of fixed offsets).
 
 	local EXPANDED_HEIGHT = 52
-	local EXPANDED_WIDTH = 344
 
 	local Overlay = Instance.new("Frame")
 	Overlay.Name = "StatsOverlay"
 	Overlay.AnchorPoint = Vector2.new(1, 0)
 	Overlay.Position = UDim2.new(1, -14, 0, 14)
-	Overlay.Size = UDim2.fromOffset(EXPANDED_WIDTH, EXPANDED_HEIGHT)
+	-- Width is driven by the content (AutomaticSize) instead of a hardcoded number, so the
+	-- pill always hugs the stats rather than leaving dead space on the right.
+	Overlay.AutomaticSize = Enum.AutomaticSize.X
+	Overlay.Size = UDim2.fromOffset(0, EXPANDED_HEIGHT)
 	Overlay.BackgroundColor3 = Theme.Section
-	Overlay.ClipsDescendants = true
 	Overlay.ZIndex = 8
 	Overlay.Parent = screenGui
 	corner(Overlay, "circle")
@@ -729,15 +834,24 @@ function Library.CreateWindow(opts)
 	pingCaption.Text = "Ping"
 	pingCaption.Parent = pingStack
 
+	-- Raw "Data Ping" jitters hard from sample to sample, so keep a small rolling average.
+	local pingSamples = {}
 	local function updatePing()
 		local ok, ping = pcall(function()
 			return StatsService.Network.ServerStatsItem["Data Ping"]:GetValue()
 		end)
-		if ok then
-			pingValue.Text = math.floor(ping) .. "ms"
-			local c = ping < 100 and Theme.Good or (ping < 200 and Theme.Warn or Theme.Bad)
-			tween(pingDot, { BackgroundColor3 = c }, 0.3)
-		end
+		if not ok or type(ping) ~= "number" or ping ~= ping then return end
+
+		table.insert(pingSamples, ping)
+		if #pingSamples > 5 then table.remove(pingSamples, 1) end
+
+		local sum = 0
+		for _, v in ipairs(pingSamples) do sum += v end
+		local avg = sum / #pingSamples
+
+		pingValue.Text = math.floor(avg + 0.5) .. "ms"
+		local c = avg < 100 and Theme.Good or (avg < 200 and Theme.Warn or Theme.Bad)
+		tween(pingDot, { BackgroundColor3 = c }, 0.3)
 	end
 
 	task.spawn(function()
@@ -749,12 +863,19 @@ function Library.CreateWindow(opts)
 	end)
 
 	do
+		-- Divide by the real elapsed time instead of assuming the window was exactly 1s and
+		-- zeroing the remainder -- that discarded leftover consistently under-reported FPS.
 		local frames, elapsed = 0, 0
-		RunService.RenderStepped:Connect(function(dt)
+		local fpsConn
+		fpsConn = RunService.RenderStepped:Connect(function(dt)
+			if not Overlay.Parent then
+				fpsConn:Disconnect()
+				return
+			end
 			frames += 1
 			elapsed += dt
-			if elapsed >= 1 then
-				fpsValue.Text = tostring(frames)
+			if elapsed >= 0.5 then
+				fpsValue.Text = tostring(math.floor(frames / elapsed + 0.5))
 				frames, elapsed = 0, 0
 			end
 		end)
@@ -798,16 +919,41 @@ function Library.CreateWindow(opts)
 	overlayPillIconHolder.Parent = overlayPill
 	Library.GetIcon(overlayPillIconHolder, 18, Theme.SubText, "eye")
 
+	-- The overlay sizes itself to its content, so collapse/expand animates scale + fade
+	-- rather than a width we would otherwise have to hardcode.
+	local overlayScale = Instance.new("UIScale")
+	overlayScale.Parent = Overlay
+	local pillScale = Instance.new("UIScale")
+	pillScale.Parent = overlayPill
+
 	local function setOverlayExpanded(expanded)
 		if expanded then
-			overlayPill.Visible = false
-			Overlay.Visible = true
-			tween(Overlay, { Size = UDim2.fromOffset(EXPANDED_WIDTH, EXPANDED_HEIGHT) }, 0.25, Enum.EasingStyle.Back)
+			tween(pillScale, { Scale = 0.7 }, 0.14)
+			tween(overlayPill, { BackgroundTransparency = 1 }, 0.14)
+			task.delay(0.14, function()
+				overlayPill.Visible = false
+				pillScale.Scale = 1
+				overlayPill.BackgroundTransparency = 0
+
+				Overlay.Visible = true
+				overlayScale.Scale = 0.75
+				Overlay.BackgroundTransparency = 1
+				tween(overlayScale, { Scale = 1 }, 0.32, Enum.EasingStyle.Back)
+				tween(Overlay, { BackgroundTransparency = 0 }, 0.22)
+			end)
 		else
-			tween(Overlay, { Size = UDim2.fromOffset(EXPANDED_HEIGHT, EXPANDED_HEIGHT) }, 0.2)
-			task.delay(0.2, function()
+			tween(overlayScale, { Scale = 0.75 }, 0.18)
+			tween(Overlay, { BackgroundTransparency = 1 }, 0.18)
+			task.delay(0.18, function()
 				Overlay.Visible = false
+				overlayScale.Scale = 1
+				Overlay.BackgroundTransparency = 0
+
 				overlayPill.Visible = true
+				pillScale.Scale = 0.7
+				overlayPill.BackgroundTransparency = 1
+				tween(pillScale, { Scale = 1 }, 0.3, Enum.EasingStyle.Back)
+				tween(overlayPill, { BackgroundTransparency = 0 }, 0.2)
 			end)
 		end
 	end
@@ -818,6 +964,10 @@ function Library.CreateWindow(opts)
 
 	local tabs = {}
 	local firstTab = true
+
+	-- Every element created with a `flag` registers a get/set pair here. That is what makes
+	-- presets possible: a preset is just a snapshot of every flag's value.
+	local flags = {}
 
 	local WindowObject = {}
 
@@ -997,10 +1147,14 @@ function Library.CreateWindow(opts)
 					task.delay(0.08, function() tween(btn, { BackgroundColor3 = Theme.ElementHover }, 0.15) end)
 					if callback then callback() end
 				end)
-				return btn
+				return {
+					Instance = btn,
+					Set = function(_, newText) btn.Text = tostring(newText) end,
+					Get = function() return btn.Text end,
+				}
 			end
 
-			function SectionObject:CreateToggle(text, default, callback)
+			function SectionObject:CreateToggle(text, default, callback, flag)
 				order += 1
 				local state = default or false
 
@@ -1044,16 +1198,32 @@ function Library.CreateWindow(opts)
 				click.Parent = holder
 				addPressFeel(click, 1)
 
-				click.MouseButton1Click:Connect(function()
-					state = not state
+				local function applyState(newState, fireCallback)
+					state = newState and true or false
 					tween(track, { BackgroundColor3 = state and Theme.Violet or Color3.fromRGB(55, 50, 80) }, 0.15)
 					tween(knob, { Position = state and UDim2.new(1, -18, 0.5, -8) or UDim2.new(0, 2, 0.5, -8) }, 0.15, Enum.EasingStyle.Back)
-					if callback then callback(state) end
+					if fireCallback ~= false and callback then callback(state) end
+				end
+
+				click.MouseButton1Click:Connect(function()
+					applyState(not state, true)
 				end)
-				return holder
+
+				if flag then
+					flags[flag] = {
+						get = function() return state end,
+						set = function(v) applyState(v, true) end,
+					}
+				end
+
+				return {
+					Instance = holder,
+					Set = function(_, v) applyState(v, true) end,
+					Get = function() return state end,
+				}
 			end
 
-			function SectionObject:CreateSlider(text, min, max, default, callback)
+			function SectionObject:CreateSlider(text, min, max, default, callback, flag)
 				order += 1
 				local value = default or min
 
@@ -1101,12 +1271,32 @@ function Library.CreateWindow(opts)
 				corner(fill, 3)
 
 				local dragging = false
+
+				-- Shared by dragging and by programmatic Set/preset loading.
+				local function applyValue(newValue, fireCallback, animate)
+					value = math.clamp(math.floor(newValue + 0.5), min, max)
+					local pct = (value - min) / (max - min)
+					valueLabel.Text = tostring(value)
+					if animate then
+						tween(fill, { Size = UDim2.new(pct, 0, 1, 0) }, 0.25)
+					else
+						fill.Size = UDim2.new(pct, 0, 1, 0)
+					end
+					if fireCallback ~= false and callback then callback(value) end
+				end
+
 				local function updateFromX(xPos)
 					local pct = math.clamp((xPos - track.AbsolutePosition.X) / track.AbsoluteSize.X, 0, 1)
-					value = math.floor(min + (max - min) * pct + 0.5)
-					fill.Size = UDim2.new(pct, 0, 1, 0)
-					valueLabel.Text = tostring(value)
-					if callback then callback(value) end
+					applyValue(min + (max - min) * pct, true, false)
+				end
+
+				if flag then
+					flags[flag] = {
+						get = function() return value end,
+						set = function(v)
+							if type(v) == "number" then applyValue(v, true, true) end
+						end,
+					}
 				end
 
 				track.InputBegan:Connect(function(input)
@@ -1125,10 +1315,15 @@ function Library.CreateWindow(opts)
 						dragging = false
 					end
 				end)
-				return holder
+
+				return {
+					Instance = holder,
+					Set = function(_, v) applyValue(v, true, true) end,
+					Get = function() return value end,
+				}
 			end
 
-			function SectionObject:CreateDropdown(text, options, default, callback)
+			function SectionObject:CreateDropdown(text, options, default, callback, flag)
 				order += 1
 				local selected = default or options[1]
 				local open = false
@@ -1209,6 +1404,24 @@ function Library.CreateWindow(opts)
 					end)
 				end
 
+				local function applySelection(opt, fireCallback)
+					local valid = false
+					for _, o in ipairs(options) do
+						if o == opt then valid = true break end
+					end
+					if not valid then return end
+					selected = opt
+					selectedLabel.Text = opt
+					if fireCallback ~= false and callback then callback(opt) end
+				end
+
+				if flag then
+					flags[flag] = {
+						get = function() return selected end,
+						set = function(v) applySelection(v, true) end,
+					}
+				end
+
 				local clickArea = Instance.new("TextButton")
 				clickArea.BackgroundTransparency = 1
 				clickArea.Size = UDim2.new(1, 0, 0, 32)
@@ -1222,7 +1435,12 @@ function Library.CreateWindow(opts)
 					tween(holder, { Size = targetSize }, 0.2)
 					tween(chevron, { Rotation = open and 180 or 0 }, 0.2)
 				end)
-				return holder
+
+				return {
+					Instance = holder,
+					Set = function(_, v) applySelection(v, true) end,
+					Get = function() return selected end,
+				}
 			end
 
 			function SectionObject:CreateProgressBar(text, percent, note)
@@ -1230,30 +1448,47 @@ function Library.CreateWindow(opts)
 				local holder = Instance.new("Frame")
 				holder.LayoutOrder = order
 				holder.BackgroundTransparency = 1
-				holder.Size = UDim2.new(1, 0, 0, 40)
+				holder.Size = UDim2.new(1, 0, 0, 42)
 				holder.Parent = section
 
 				local label2 = Instance.new("TextLabel")
 				label2.BackgroundTransparency = 1
-				label2.Size = UDim2.new(1, 0, 0, 16)
+				label2.Size = UDim2.new(1, -46, 0, 16)
 				label2.Font = FONT
 				label2.TextSize = 12
 				label2.TextColor3 = Theme.Text
 				label2.TextXAlignment = Enum.TextXAlignment.Left
+				label2.TextTruncate = Enum.TextTruncate.AtEnd
 				label2.Text = text .. (note and ("  \194\183  " .. note) or "")
 				label2.Parent = holder
 
+				-- Percentage read-out on the right, so the bar is readable without guessing.
+				local pctLabel = Instance.new("TextLabel")
+				pctLabel.AnchorPoint = Vector2.new(1, 0)
+				pctLabel.Position = UDim2.new(1, 0, 0, 0)
+				pctLabel.Size = UDim2.fromOffset(44, 16)
+				pctLabel.BackgroundTransparency = 1
+				pctLabel.Font = FONT_BOLD
+				pctLabel.TextSize = 12
+				pctLabel.TextColor3 = Theme.SubText
+				pctLabel.TextXAlignment = Enum.TextXAlignment.Right
+				pctLabel.Text = math.floor(percent + 0.5) .. "%"
+				pctLabel.Parent = holder
+
 				local track = Instance.new("Frame")
-				track.Position = UDim2.new(0, 0, 0, 22)
+				track.Position = UDim2.new(0, 0, 0, 24)
 				track.Size = UDim2.new(1, 0, 0, 8)
-				track.BackgroundColor3 = Color3.fromRGB(45, 40, 70)
+				track.BackgroundColor3 = Color3.fromRGB(38, 34, 60)
 				track.ClipsDescendants = true
 				track.Parent = holder
 				corner(track, 4)
 
 				local fill = Instance.new("Frame")
-				fill.Size = UDim2.new(percent / 100, 0, 1, 0)
+				fill.Size = UDim2.new(0, 0, 1, 0)
 				fill.BackgroundColor3 = Theme.Violet
+				-- Without this the shimmer escapes the filled region and slides across the
+				-- whole track, which reads as a stray bright block on the empty part.
+				fill.ClipsDescendants = true
 				fill.Parent = track
 				corner(fill, 4)
 
@@ -1264,17 +1499,288 @@ function Library.CreateWindow(opts)
 				})
 				fillGradient.Parent = fill
 
+				-- Soft gradient sweep rather than a hard white rectangle.
 				local shimmer = Instance.new("Frame")
-				shimmer.Size = UDim2.new(0.25, 0, 1, 0)
+				shimmer.Size = UDim2.new(0.4, 0, 1, 0)
 				shimmer.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-				shimmer.BackgroundTransparency = 0.75
-				shimmer.Position = UDim2.new(-0.3, 0, 0, 0)
+				shimmer.BackgroundTransparency = 0.82
+				shimmer.BorderSizePixel = 0
+				shimmer.Position = UDim2.new(-0.45, 0, 0, 0)
 				shimmer.Parent = fill
 
-				local shimmerTween = TweenService:Create(shimmer, TweenInfo.new(1.6, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, false), { Position = UDim2.new(1.1, 0, 0, 0) })
-				shimmerTween:Play()
+				local shimmerGradient = Instance.new("UIGradient")
+				shimmerGradient.Transparency = NumberSequence.new({
+					NumberSequenceKeypoint.new(0, 1),
+					NumberSequenceKeypoint.new(0.5, 0),
+					NumberSequenceKeypoint.new(1, 1),
+				})
+				shimmerGradient.Parent = shimmer
 
-				return holder
+				TweenService:Create(
+					shimmer,
+					TweenInfo.new(1.9, Enum.EasingStyle.Sine, Enum.EasingDirection.InOut, -1, false, 0.4),
+					{ Position = UDim2.new(1.05, 0, 0, 0) }
+				):Play()
+
+				local current = percent
+				local function setPercent(value, newNote, animate)
+					current = math.clamp(value, 0, 100)
+					pctLabel.Text = math.floor(current + 0.5) .. "%"
+					if newNote ~= nil then
+						label2.Text = text .. (newNote ~= "" and ("  \194\183  " .. newNote) or "")
+					end
+					local goal = UDim2.new(current / 100, 0, 1, 0)
+					if animate == false then
+						fill.Size = goal
+					else
+						tween(fill, { Size = goal }, 0.55, Enum.EasingStyle.Quint)
+					end
+				end
+
+				-- Animate up from zero on first paint so the bar reads as "filling".
+				setPercent(percent, nil, true)
+
+				return {
+					Instance = holder,
+					Set = function(_, value, newNote) setPercent(value, newNote, true) end,
+					Get = function() return current end,
+				}
+			end
+
+			function SectionObject:CreateInput(text, placeholder, callback, flag)
+				order += 1
+				local holder = Instance.new("Frame")
+				holder.LayoutOrder = order
+				holder.BackgroundColor3 = Theme.Element
+				holder.Size = UDim2.new(1, 0, 0, 32)
+				holder.Parent = section
+				corner(holder, 6)
+
+				local label2 = Instance.new("TextLabel")
+				label2.BackgroundTransparency = 1
+				label2.Position = UDim2.new(0, 10, 0, 0)
+				label2.Size = UDim2.new(0.4, 0, 1, 0)
+				label2.Font = FONT
+				label2.TextSize = 13
+				label2.TextColor3 = Theme.Text
+				label2.TextXAlignment = Enum.TextXAlignment.Left
+				label2.TextTruncate = Enum.TextTruncate.AtEnd
+				label2.Text = text
+				label2.Parent = holder
+
+				local box = Instance.new("TextBox")
+				box.AnchorPoint = Vector2.new(1, 0.5)
+				box.Position = UDim2.new(1, -6, 0.5, 0)
+				box.Size = UDim2.new(0.55, -12, 0, 24)
+				box.BackgroundColor3 = Theme.Background
+				box.Font = FONT
+				box.TextSize = 12
+				box.TextColor3 = Theme.Text
+				box.PlaceholderText = placeholder or ""
+				box.PlaceholderColor3 = Theme.SubText
+				box.Text = ""
+				box.ClearTextOnFocus = false
+				box.Parent = holder
+				corner(box, 5)
+
+				local boxPad = Instance.new("UIPadding")
+				boxPad.PaddingLeft = UDim.new(0, 8)
+				boxPad.PaddingRight = UDim.new(0, 8)
+				boxPad.Parent = box
+
+				local boxStroke = Instance.new("UIStroke")
+				boxStroke.Color = Theme.Violet
+				boxStroke.Thickness = 1
+				boxStroke.Transparency = 0.85
+				boxStroke.Parent = box
+
+				box.Focused:Connect(function() tween(boxStroke, { Transparency = 0.2 }, 0.15) end)
+				box.FocusLost:Connect(function(enter)
+					tween(boxStroke, { Transparency = 0.85 }, 0.15)
+					if callback then callback(box.Text, enter) end
+				end)
+
+				if flag then
+					flags[flag] = {
+						get = function() return box.Text end,
+						set = function(v) box.Text = tostring(v or "") end,
+					}
+				end
+
+				return {
+					Instance = holder,
+					Set = function(_, v) box.Text = tostring(v or "") end,
+					Get = function() return box.Text end,
+				}
+			end
+
+			-- Full preset manager: name a preset, save the current value of every flagged
+			-- element, then load or delete it later. Persists to disk when the environment
+			-- exposes writefile/readfile, otherwise it stays for the session.
+			function SectionObject:CreatePresetManager()
+				order += 1
+
+				local nameHolder = Instance.new("Frame")
+				nameHolder.LayoutOrder = order
+				nameHolder.BackgroundTransparency = 1
+				nameHolder.Size = UDim2.new(1, 0, 0, 32)
+				nameHolder.Parent = section
+
+				local nameBox = Instance.new("TextBox")
+				nameBox.Size = UDim2.new(1, -92, 1, 0)
+				nameBox.BackgroundColor3 = Theme.Element
+				nameBox.Font = FONT
+				nameBox.TextSize = 13
+				nameBox.TextColor3 = Theme.Text
+				nameBox.PlaceholderText = "Preset name..."
+				nameBox.PlaceholderColor3 = Theme.SubText
+				nameBox.Text = ""
+				nameBox.ClearTextOnFocus = false
+				nameBox.TextXAlignment = Enum.TextXAlignment.Left
+				nameBox.Parent = nameHolder
+				corner(nameBox, 6)
+
+				local nbPad = Instance.new("UIPadding")
+				nbPad.PaddingLeft = UDim.new(0, 10)
+				nbPad.PaddingRight = UDim.new(0, 10)
+				nbPad.Parent = nameBox
+
+				local nbStroke = Instance.new("UIStroke")
+				nbStroke.Color = Theme.Violet
+				nbStroke.Thickness = 1
+				nbStroke.Transparency = 0.85
+				nbStroke.Parent = nameBox
+				nameBox.Focused:Connect(function() tween(nbStroke, { Transparency = 0.2 }, 0.15) end)
+				nameBox.FocusLost:Connect(function() tween(nbStroke, { Transparency = 0.85 }, 0.15) end)
+
+				local saveBtn = Instance.new("TextButton")
+				saveBtn.AnchorPoint = Vector2.new(1, 0.5)
+				saveBtn.Position = UDim2.new(1, 0, 0.5, 0)
+				saveBtn.Size = UDim2.fromOffset(84, 32)
+				saveBtn.BackgroundColor3 = Theme.Element
+				saveBtn.AutoButtonColor = false
+				saveBtn.Font = FONT_BOLD
+				saveBtn.TextSize = 12
+				saveBtn.TextColor3 = Theme.Text
+				saveBtn.Text = "Save"
+				saveBtn.Parent = nameHolder
+				corner(saveBtn, 6)
+				addPressFeel(saveBtn, 1.04)
+				saveBtn.MouseEnter:Connect(function() tween(saveBtn, { BackgroundColor3 = Theme.Violet }, 0.15) end)
+				saveBtn.MouseLeave:Connect(function() tween(saveBtn, { BackgroundColor3 = Theme.Element }, 0.15) end)
+
+				order += 1
+				local listHolder = Instance.new("Frame")
+				listHolder.LayoutOrder = order
+				listHolder.BackgroundTransparency = 1
+				listHolder.Size = UDim2.new(1, 0, 0, 0)
+				listHolder.AutomaticSize = Enum.AutomaticSize.Y
+				listHolder.Parent = section
+
+				local listLayout2 = Instance.new("UIListLayout")
+				listLayout2.SortOrder = Enum.SortOrder.LayoutOrder
+				listLayout2.Padding = UDim.new(0, 6)
+				listLayout2.Parent = listHolder
+
+				local emptyLabel = Instance.new("TextLabel")
+				emptyLabel.BackgroundTransparency = 1
+				emptyLabel.Size = UDim2.new(1, 0, 0, 18)
+				emptyLabel.Font = FONT
+				emptyLabel.TextSize = 11
+				emptyLabel.TextColor3 = Theme.SubText
+				emptyLabel.TextXAlignment = Enum.TextXAlignment.Left
+				emptyLabel.Text = "No presets saved yet."
+				emptyLabel.Parent = listHolder
+
+				local refreshList
+
+				local function makeRow(presetName)
+					local row = Instance.new("Frame")
+					row.BackgroundColor3 = Theme.Element
+					row.Size = UDim2.new(1, 0, 0, 30)
+					row.Parent = listHolder
+					corner(row, 6)
+
+					local rowLabel = Instance.new("TextLabel")
+					rowLabel.BackgroundTransparency = 1
+					rowLabel.Position = UDim2.new(0, 10, 0, 0)
+					rowLabel.Size = UDim2.new(1, -130, 1, 0)
+					rowLabel.Font = FONT
+					rowLabel.TextSize = 12
+					rowLabel.TextColor3 = Theme.Text
+					rowLabel.TextXAlignment = Enum.TextXAlignment.Left
+					rowLabel.TextTruncate = Enum.TextTruncate.AtEnd
+					rowLabel.Text = presetName
+					rowLabel.Parent = row
+
+					local delBtn = Instance.new("TextButton")
+					delBtn.AnchorPoint = Vector2.new(1, 0.5)
+					delBtn.Position = UDim2.new(1, -8, 0.5, 0)
+					delBtn.Size = UDim2.fromOffset(52, 22)
+					delBtn.BackgroundColor3 = Theme.Section
+					delBtn.AutoButtonColor = false
+					delBtn.Font = FONT
+					delBtn.TextSize = 11
+					delBtn.TextColor3 = Theme.SubText
+					delBtn.Text = "Delete"
+					delBtn.Parent = row
+					corner(delBtn, 5)
+					addPressFeel(delBtn, 1.06)
+					delBtn.MouseEnter:Connect(function() tween(delBtn, { BackgroundColor3 = Theme.Bad, TextColor3 = Theme.Text }, 0.15) end)
+					delBtn.MouseLeave:Connect(function() tween(delBtn, { BackgroundColor3 = Theme.Section, TextColor3 = Theme.SubText }, 0.15) end)
+					delBtn.MouseButton1Click:Connect(function()
+						WindowObject:DeletePreset(presetName)
+						refreshList()
+					end)
+
+					local loadBtn2 = Instance.new("TextButton")
+					loadBtn2.AnchorPoint = Vector2.new(1, 0.5)
+					loadBtn2.Position = UDim2.new(1, -66, 0.5, 0)
+					loadBtn2.Size = UDim2.fromOffset(52, 22)
+					loadBtn2.BackgroundColor3 = Theme.Section
+					loadBtn2.AutoButtonColor = false
+					loadBtn2.Font = FONT
+					loadBtn2.TextSize = 11
+					loadBtn2.TextColor3 = Theme.SubText
+					loadBtn2.Text = "Load"
+					loadBtn2.Parent = row
+					corner(loadBtn2, 5)
+					addPressFeel(loadBtn2, 1.06)
+					loadBtn2.MouseEnter:Connect(function() tween(loadBtn2, { BackgroundColor3 = Theme.Violet, TextColor3 = Theme.Text }, 0.15) end)
+					loadBtn2.MouseLeave:Connect(function() tween(loadBtn2, { BackgroundColor3 = Theme.Section, TextColor3 = Theme.SubText }, 0.15) end)
+					loadBtn2.MouseButton1Click:Connect(function()
+						WindowObject:LoadPreset(presetName)
+					end)
+
+					return row
+				end
+
+				refreshList = function()
+					for _, child in ipairs(listHolder:GetChildren()) do
+						if child:IsA("Frame") then child:Destroy() end
+					end
+					local names = WindowObject:GetPresetNames()
+					emptyLabel.Visible = (#names == 0)
+					for _, n in ipairs(names) do
+						makeRow(n)
+					end
+				end
+
+				saveBtn.MouseButton1Click:Connect(function()
+					local presetName = nameBox.Text:gsub("^%s+", ""):gsub("%s+$", "")
+					if presetName == "" then
+						Notify("Preset", "Give the preset a name first.", 2.5, "clipboard-list")
+						return
+					end
+					WindowObject:SavePreset(presetName)
+					nameBox.Text = ""
+					refreshList()
+					Notify("Preset saved", ("\"%s\" now stores %d settings."):format(presetName, WindowObject:CountFlags()), 2.5, "save")
+				end)
+
+				refreshList()
+
+				return { Instance = nameHolder, Refresh = refreshList }
 			end
 
 			function SectionObject:CreateLabel(text)
@@ -1290,7 +1796,11 @@ function Library.CreateWindow(opts)
 				label2.TextWrapped = true
 				label2.Text = text
 				label2.Parent = section
-				return label2
+				return {
+					Instance = label2,
+					Set = function(_, newText) label2.Text = tostring(newText) end,
+					Get = function() return label2.Text end,
+				}
 			end
 
 			return SectionObject
@@ -1301,6 +1811,92 @@ function Library.CreateWindow(opts)
 
 	function WindowObject:Notify(title, content, duration, icon)
 		Notify(title, content, duration, icon)
+	end
+
+	-- ============ Presets ============
+	-- A preset is a snapshot of every flagged element's value. Saved to disk when the
+	-- environment provides file functions (executors do; a normal Roblox client does not),
+	-- otherwise kept in memory for the session.
+
+	local PRESET_FILE = "YunoHub_presets.json"
+	local presets = {}
+
+	local function fileApiAvailable()
+		return type(writefile) == "function"
+			and type(readfile) == "function"
+			and type(isfile) == "function"
+	end
+
+	local function persistPresets()
+		if not fileApiAvailable() then return end
+		pcall(function()
+			writefile(PRESET_FILE, HttpService:JSONEncode(presets))
+		end)
+	end
+
+	local function restorePresets()
+		if not fileApiAvailable() then return end
+		pcall(function()
+			if isfile(PRESET_FILE) then
+				local decoded = HttpService:JSONDecode(readfile(PRESET_FILE))
+				if type(decoded) == "table" then presets = decoded end
+			end
+		end)
+	end
+	restorePresets()
+
+	function WindowObject:CountFlags()
+		local n = 0
+		for _ in pairs(flags) do n += 1 end
+		return n
+	end
+
+	function WindowObject:GetConfig()
+		local config = {}
+		for name, entry in pairs(flags) do
+			local ok, value = pcall(entry.get)
+			if ok then config[name] = value end
+		end
+		return config
+	end
+
+	function WindowObject:LoadConfig(config)
+		if type(config) ~= "table" then return end
+		for name, value in pairs(config) do
+			local entry = flags[name]
+			if entry then pcall(entry.set, value) end
+		end
+	end
+
+	function WindowObject:SavePreset(name)
+		presets[name] = self:GetConfig()
+		persistPresets()
+	end
+
+	function WindowObject:LoadPreset(name)
+		local config = presets[name]
+		if not config then
+			Notify("Preset", ("\"%s\" no longer exists."):format(tostring(name)), 2.5, "clipboard-list")
+			return false
+		end
+		self:LoadConfig(config)
+		Notify("Preset loaded", ("\"%s\" has been applied."):format(name), 2.5, "wand")
+		return true
+	end
+
+	function WindowObject:DeletePreset(name)
+		if presets[name] == nil then return false end
+		presets[name] = nil
+		persistPresets()
+		Notify("Preset deleted", ("\"%s\" was removed."):format(name), 2.5, "skull")
+		return true
+	end
+
+	function WindowObject:GetPresetNames()
+		local names = {}
+		for name in pairs(presets) do table.insert(names, name) end
+		table.sort(names)
+		return names
 	end
 
 	function WindowObject:SetVisible(visible)
@@ -1372,10 +1968,26 @@ function Library.CreateLoader(config)
 	panel.ZIndex = 3
 	panel.Parent = screenGui
 	corner(panel, 12)
+
+	local panelScale = Instance.new("UIScale")
+	panelScale.Parent = panel
+
 	local panelStroke = Instance.new("UIStroke")
 	panelStroke.Thickness = 1.4
 	panelStroke.Color = Theme.Violet
 	panelStroke.Parent = panel
+
+	-- Shared exit animation for both the close button and picking an instance.
+	local function closePanel(onDone)
+		tween(panelScale, { Scale = 0.85 }, 0.24, Enum.EasingStyle.Back, Enum.EasingDirection.In)
+		tween(panel, { BackgroundTransparency = 1 }, 0.24)
+		tween(panelStroke, { Transparency = 1 }, 0.18)
+		tween(dim, { BackgroundTransparency = 1 }, 0.26)
+		task.delay(0.28, function()
+			screenGui:Destroy()
+			if onDone then onDone() end
+		end)
+	end
 
 	RunService.Heartbeat:Connect(function()
 		if not panel.Parent then return end
@@ -1405,7 +2017,7 @@ function Library.CreateLoader(config)
 	logoHolder.Size = UDim2.fromOffset(20, 20)
 	logoHolder.ZIndex = 5
 	logoHolder.Parent = Topbar
-	Library.GetIcon(logoHolder, 20, Theme.Cyan, "sparkles")
+	Library.GetLogo(logoHolder, 20, Theme.Cyan)
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.BackgroundTransparency = 1
@@ -1449,9 +2061,7 @@ function Library.CreateLoader(config)
 	closeBtn.MouseEnter:Connect(function() tween(closeBtn, { TextColor3 = Theme.Bad }, 0.15) end)
 	closeBtn.MouseLeave:Connect(function() tween(closeBtn, { TextColor3 = Theme.SubText }, 0.15) end)
 	closeBtn.MouseButton1Click:Connect(function()
-		tween(panel, { BackgroundTransparency = 1, Size = panel.Size - UDim2.fromOffset(30, 30) }, 0.2)
-		tween(dim, { BackgroundTransparency = 1 }, 0.2)
-		task.delay(0.2, function() screenGui:Destroy() end)
+		closePanel()
 	end)
 
 	makeDraggable(Topbar, panel)
@@ -1552,10 +2162,7 @@ function Library.CreateLoader(config)
 			end
 
 			loadBtn.Text = entry.Url and "..." or "Load"
-			tween(panel, { BackgroundTransparency = 1, Size = panel.Size - UDim2.fromOffset(30, 30) }, 0.25)
-			tween(dim, { BackgroundTransparency = 1 }, 0.25)
-			task.delay(0.25, function()
-				screenGui:Destroy()
+			closePanel(function()
 				local ok, err = pcall(function()
 					local initFn
 					if entry.Module then
@@ -1578,8 +2185,25 @@ function Library.CreateLoader(config)
 	end
 
 	-- Pop-up opening animation
-	panel.Size = UDim2.fromOffset(420 * 0.85, 480 * 0.85)
-	tween(panel, { Size = UDim2.fromOffset(420, 480), BackgroundTransparency = 0 }, 0.45, Enum.EasingStyle.Back)
+	panelScale.Scale = 0.85
+	panelStroke.Transparency = 1
+	tween(panelScale, { Scale = 1 }, 0.45, Enum.EasingStyle.Back)
+	tween(panel, { BackgroundTransparency = 0 }, 0.3)
+	tween(panelStroke, { Transparency = 0 }, 0.4)
+
+	-- Cards stagger in behind the panel so the list reads as assembling itself.
+	for i, card in ipairs(list:GetChildren()) do
+		if card:IsA("Frame") then
+			local cardScale = Instance.new("UIScale")
+			cardScale.Scale = 0.92
+			cardScale.Parent = card
+			card.BackgroundTransparency = 1
+			task.delay(0.08 + (i * 0.05), function()
+				tween(cardScale, { Scale = 1 }, 0.4, Enum.EasingStyle.Back)
+				tween(card, { BackgroundTransparency = 0 }, 0.28)
+			end)
+		end
+	end
 
 	return screenGui
 end

@@ -83,6 +83,18 @@ its card in the loader. It accepts two kinds of value:
   },
   ```
 
+## Hub logo
+
+`Library.Logo` is the branding image used in the loader topbar, the window topbar and the
+launcher orb. Upload your logo in Studio and paste its asset ID:
+
+```lua
+Library.Logo = "rbxassetid://123456789"
+```
+
+Unlike the monochrome icons it is drawn in full colour, so artwork keeps its own look.
+While it is empty the library falls back to the `sparkles` icon.
+
 ## Making the icon presets real
 
 The icons are currently placeholders (circle + first letter) until real images are linked —
@@ -109,6 +121,55 @@ it yourself with your own Open Cloud API key (from
 https://create.roblox.com/dashboard/credentials) — see the comment at the top of that script
 for the exact setup steps. Nothing about your account or key is shared with anyone but Roblox's
 API when you run it.
+
+## Presets
+
+Any toggle, slider, dropdown or input created with a **flag** (the last argument) is
+included in presets automatically:
+
+```lua
+quickSection:CreateToggle("Auto-Farm", false, callback, "autoFarm")
+quickSection:CreateSlider("Speed", 0, 100, 50, callback, "speed")
+uiSection:CreateDropdown("Accent", { "Violet", "Cyan" }, "Violet", callback, "accent")
+```
+
+Then drop a ready-made manager into any section — name box, Save button, and a list of
+saved presets each with Load/Delete:
+
+```lua
+presetSection:CreatePresetManager()
+```
+
+Presets are written to `YunoHub_presets.json` when the environment exposes `writefile` /
+`readfile` (executors do), so they survive between sessions. In a normal Roblox client
+those functions don't exist and presets simply live for the session instead.
+
+You can also drive it from code:
+
+```lua
+Window:GetConfig()            -- snapshot of every flagged value
+Window:LoadConfig(tbl)        -- apply a snapshot
+Window:SavePreset("PvP")
+Window:LoadPreset("PvP")
+Window:DeletePreset("PvP")
+Window:GetPresetNames()
+```
+
+## Element handles
+
+Every `Create*` call returns a handle rather than the raw Instance, so elements can be
+updated after creation:
+
+```lua
+local xpBar = section:CreateProgressBar("Level XP", 68, "1,360 / 2,000")
+xpBar:Set(90, "1,800 / 2,000")
+
+local toggle = section:CreateToggle("Auto-Farm", false, nil, "autoFarm")
+toggle:Set(true)
+print(toggle:Get())
+```
+
+Use `handle.Instance` if you need the underlying Roblox object.
 
 ## Icons in notifications
 
