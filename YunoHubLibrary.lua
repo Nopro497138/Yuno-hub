@@ -320,6 +320,7 @@ function Library.CreateWindow(opts)
 	screenGui.ResetOnSpawn = false
 	screenGui.IgnoreGuiInset = true
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.DisplayOrder = 1000
 	screenGui.Parent = playerGui
 
 	buildGalaxyBackdrop(screenGui)
@@ -1348,6 +1349,7 @@ function Library.CreateLoader(config)
 	screenGui.ResetOnSpawn = false
 	screenGui.IgnoreGuiInset = true
 	screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+	screenGui.DisplayOrder = 1000
 	screenGui.Parent = playerGui
 
 	buildGalaxyBackdrop(screenGui)
@@ -1381,46 +1383,83 @@ function Library.CreateLoader(config)
 		panelStroke.Color = Color3.fromHSV(hue % 1, 0.55, 1)
 	end)
 
-	local header = Instance.new("Frame")
-	header.BackgroundTransparency = 1
-	header.Size = UDim2.new(1, 0, 0, 70)
-	header.ZIndex = 4
-	header.Parent = panel
+	-- Topbar (matches the main Window's chrome): icon + title/subtitle, draggable, closeable.
+	local Topbar = Instance.new("Frame")
+	Topbar.BackgroundColor3 = Theme.Topbar
+	Topbar.Size = UDim2.new(1, 0, 0, 44)
+	Topbar.ZIndex = 4
+	Topbar.Parent = panel
+	corner(Topbar, 12)
+
+	local topbarFix = Instance.new("Frame")
+	topbarFix.BackgroundColor3 = Theme.Topbar
+	topbarFix.BorderSizePixel = 0
+	topbarFix.Position = UDim2.new(0, 0, 1, -12)
+	topbarFix.Size = UDim2.new(1, 0, 0, 12)
+	topbarFix.ZIndex = 4
+	topbarFix.Parent = Topbar
 
 	local logoHolder = Instance.new("Frame")
-	logoHolder.AnchorPoint = Vector2.new(0.5, 0)
-	logoHolder.Position = UDim2.new(0.5, 0, 0, 16)
-	logoHolder.Size = UDim2.fromOffset(28, 28)
-	logoHolder.ZIndex = 4
-	logoHolder.Parent = header
-	Library.GetIcon(logoHolder, 28, Theme.Cyan, "sparkles")
+	logoHolder.BackgroundTransparency = 1
+	logoHolder.Position = UDim2.new(0, 12, 0.5, -10)
+	logoHolder.Size = UDim2.fromOffset(20, 20)
+	logoHolder.ZIndex = 5
+	logoHolder.Parent = Topbar
+	Library.GetIcon(logoHolder, 20, Theme.Cyan, "sparkles")
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.BackgroundTransparency = 1
-	titleLabel.Position = UDim2.new(0, 0, 0, 44)
-	titleLabel.Size = UDim2.new(1, 0, 0, 22)
+	titleLabel.Position = UDim2.new(0, 40, 0, 2)
+	titleLabel.Size = UDim2.new(1, -80, 0, 18)
 	titleLabel.Font = FONT_BOLD
-	titleLabel.TextSize = 18
+	titleLabel.TextSize = 15
 	titleLabel.TextColor3 = Theme.Text
+	titleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	titleLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	titleLabel.Text = config.Title or "Yuno Hub"
-	titleLabel.ZIndex = 4
-	titleLabel.Parent = header
+	titleLabel.ZIndex = 5
+	titleLabel.Parent = Topbar
 
 	local subtitleLabel = Instance.new("TextLabel")
 	subtitleLabel.BackgroundTransparency = 1
-	subtitleLabel.Position = UDim2.new(0, 0, 0, 46)
-	subtitleLabel.Size = UDim2.new(1, 0, 0, 16)
+	subtitleLabel.Position = UDim2.new(0, 40, 0, 20)
+	subtitleLabel.Size = UDim2.new(1, -80, 0, 16)
 	subtitleLabel.Font = FONT
 	subtitleLabel.TextSize = 11
 	subtitleLabel.TextColor3 = Theme.SubText
+	subtitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+	subtitleLabel.TextTruncate = Enum.TextTruncate.AtEnd
 	subtitleLabel.Text = config.Subtitle or "Select an instance to load"
-	subtitleLabel.ZIndex = 4
-	subtitleLabel.Parent = header
+	subtitleLabel.ZIndex = 5
+	subtitleLabel.Parent = Topbar
+
+	local closeBtn = Instance.new("TextButton")
+	closeBtn.AnchorPoint = Vector2.new(1, 0.5)
+	closeBtn.Position = UDim2.new(1, -12, 0.5, 0)
+	closeBtn.Size = UDim2.fromOffset(26, 26)
+	closeBtn.BackgroundTransparency = 1
+	closeBtn.AutoButtonColor = false
+	closeBtn.Font = FONT_BOLD
+	closeBtn.TextSize = 14
+	closeBtn.TextColor3 = Theme.SubText
+	closeBtn.Text = "\195\151"
+	closeBtn.ZIndex = 5
+	closeBtn.Parent = Topbar
+	addPressFeel(closeBtn, 1.15)
+	closeBtn.MouseEnter:Connect(function() tween(closeBtn, { TextColor3 = Theme.Bad }, 0.15) end)
+	closeBtn.MouseLeave:Connect(function() tween(closeBtn, { TextColor3 = Theme.SubText }, 0.15) end)
+	closeBtn.MouseButton1Click:Connect(function()
+		tween(panel, { BackgroundTransparency = 1, Size = panel.Size - UDim2.fromOffset(30, 30) }, 0.2)
+		tween(dim, { BackgroundTransparency = 1 }, 0.2)
+		task.delay(0.2, function() screenGui:Destroy() end)
+	end)
+
+	makeDraggable(Topbar, panel)
 
 	local list = Instance.new("ScrollingFrame")
 	list.BackgroundTransparency = 1
-	list.Position = UDim2.new(0, 16, 0, 78)
-	list.Size = UDim2.new(1, -32, 1, -94)
+	list.Position = UDim2.new(0, 16, 0, 56)
+	list.Size = UDim2.new(1, -32, 1, -72)
 	list.CanvasSize = UDim2.new(0, 0, 0, 0)
 	list.AutomaticCanvasSize = Enum.AutomaticSize.Y
 	list.ScrollBarThickness = 3
