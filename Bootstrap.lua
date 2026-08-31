@@ -20,7 +20,7 @@
 	  2. Set RAW_BASE below to your repo's raw.githubusercontent.com base URL.
 ]]
 
-local RAW_BASE = "https://raw.githubusercontent.com/<user>/<repo>/main/"
+local RAW_BASE = "https://raw.githubusercontent.com/Nopro497138/Yuno-hub/main/"
 
 local function fetchLibrary()
 	local source = game:HttpGet(RAW_BASE .. "YunoHubLibrary.lua")
