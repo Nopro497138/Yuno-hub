@@ -50,7 +50,7 @@ local FONT_BOLD = Enum.Font.GothamSemibold
 -- Trag hier nach dem Upload deiner Icons (siehe /icons, GitHub-Link, Studio-Asset-Upload) die
 -- jeweilige rbxassetid ein, z.B. home = "rbxassetid://123456789".
 Library.IconAssets = {
-	home = "", settings = "", sparkles = "", ["bar-chart"] = "", eye = "", power = "",
+	home = "", settings = "", sparkles = "", ["bar-chart"] = "rbxassetid://130886720435719", eye = "", power = "",
 	skull = "", crosshair = "", shield = "", sword = "", zap = "", gift = "", trophy = "",
 	bell = "", lock = "", flame = "", gem = "", package = "", user = "", rocket = "",
 }
