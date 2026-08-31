@@ -1,25 +1,25 @@
 --[[
-	Hubs/SecondInstance.lua  (ModuleScript)
+	Hubs/SecondInstance.lua  (ModuleScript, or a raw file fetched via loadstring/GitHub)
 
-	Minimales zweites Beispiel, um zu zeigen, wie einfach eine weitere Instanz ist: eine
-	Datei, eine Funktion, eigenes Fenster + eigene Tabs. Einfach kopieren, umbenennen und
-	in Loader.client.lua referenzieren, um dein eigenes Hub hinzuzufügen.
+	Minimal second example to show how easy another instance is: one file, one function, its
+	own window and tabs. Copy it, rename it, and reference it in Loader.client.lua (or
+	Bootstrap.lua) to add your own hub.
 ]]
 
 return function(Library)
 	local Window = Library.CreateWindow({
-		Title = "Zweite Instanz",
-		Subtitle = "Minimal-Beispiel",
+		Title = "Second Instance",
+		Subtitle = "Minimal example",
 	})
 
 	local mainTab = Window:CreateTab("Main", "skull")
-	local section = mainTab:CreateSection("Beispiel-Elemente")
-	section:CreateLabel("Das hier ist ein komplett unabhängiges zweites Hub.")
-	section:CreateButton("Test-Button", function()
-		Window:Notify("Zweite Instanz", "Button wurde geklickt.", 2.5)
+	local section = mainTab:CreateSection("Example Elements")
+	section:CreateLabel("This is a completely independent second hub.")
+	section:CreateButton("Test button", function()
+		Window:Notify("Second Instance", "Button was clicked.", 2.5)
 	end)
-	section:CreateToggle("Beispiel-Toggle", false, nil)
-	section:CreateSlider("Beispiel-Slider", 0, 10, 5, nil)
+	section:CreateToggle("Example toggle", false, nil)
+	section:CreateSlider("Example slider", 0, 10, 5, nil)
 
 	return Window
 end

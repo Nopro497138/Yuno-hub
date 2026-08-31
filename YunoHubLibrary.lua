@@ -1,18 +1,22 @@
 --[[
 	YunoHubLibrary.lua  (ModuleScript)
 
-	Wiederverwendbare UI-Library im Galaxy-Style, konzeptionell wie Rayfield aufgebaut:
-	Library.CreateLoader(...)  -> Instanz-Auswahlbildschirm (zeigt mehrere Hubs zur Auswahl)
-	Library.CreateWindow(...)  -> das eigentliche Hub-Fenster
+	Reusable UI library in the Galaxy style, structured conceptually like Rayfield:
+	Library.CreateLoader(...)  -> instance-selection screen (shows several hubs to pick from)
+	Library.CreateWindow(...)  -> the actual hub window
 	Window:CreateTab(name, icon) -> Tab
 	Tab:CreateSection(name, info) -> Section
 	Section:CreateButton / :CreateToggle / :CreateSlider / :CreateDropdown / :CreateProgressBar / :CreateLabel
 	Window:Notify(title, content, duration)
 	Window:SetVisible(bool) / Window:Unload()
 
-	Icons: Library.IconAssets[name] = "rbxassetid://..." — trag hier deine eigenen, hochgeladenen
-	Asset-IDs ein (siehe /icons Ordner + README). Solange ein Eintrag leer ist, zeigt die Library
-	einen sauberen Monogramm-Platzhalter (Kreis + Anfangsbuchstabe) statt eines kaputten Bildes.
+	This same file works both as a Roblox ModuleScript (require(...)) AND as a raw chunk
+	loaded via loadstring(game:HttpGet(url))() — it just needs to end in `return Library`
+	either way, which it does. See Bootstrap.lua for the loadstring/GitHub entry point.
+
+	Icons: Library.IconAssets[name] = "rbxassetid://..." — fill in your own uploaded asset
+	IDs here (see the /icons folder + README). While an entry is empty, the library shows a
+	clean monogram placeholder (circle + first letter) instead of a broken image.
 ]]
 
 local TweenService = game:GetService("TweenService")
@@ -47,15 +51,15 @@ local Theme = Library.Theme
 local FONT = Enum.Font.Gotham
 local FONT_BOLD = Enum.Font.GothamSemibold
 
--- Trag hier nach dem Upload deiner Icons (siehe /icons, GitHub-Link, Studio-Asset-Upload) die
--- jeweilige rbxassetid ein, z.B. home = "rbxassetid://123456789".
+-- After uploading your icons (see /icons, GitHub link, Studio asset upload), fill in the
+-- matching rbxassetid here, e.g. home = "rbxassetid://123456789".
 Library.IconAssets = {
 	home = "", settings = "", sparkles = "", ["bar-chart"] = "", eye = "", power = "",
 	skull = "", crosshair = "", shield = "", sword = "", zap = "", gift = "", trophy = "",
 	bell = "", lock = "", flame = "", gem = "", package = "", user = "", rocket = "",
 }
 
--- ============ Generische Helfer ============
+-- ============ Generic helpers ============
 
 local function corner(parent, radius)
 	local c = Instance.new("UICorner")
@@ -79,7 +83,7 @@ local function tween(inst, props, dur, style, dir)
 	return t
 end
 
--- Hover-Grow + Press-Squeeze, für ein spürbares, "richtiges" Klickgefühl
+-- Hover-grow + press-squeeze, for a tactile, "real" click feel
 local function addPressFeel(button, upScale)
 	upScale = upScale or 1.04
 	local scale = Instance.new("UIScale")
@@ -111,8 +115,8 @@ local function makeDraggable(handle, target)
 	end)
 end
 
--- ============ Icon-System ============
--- Nutzt eine hochgeladene rbxassetid falls vorhanden, sonst ein sauberes Monogramm.
+-- ============ Icon system ============
+-- Uses an uploaded rbxassetid if one is set, otherwise falls back to a clean monogram.
 
 function Library.GetIcon(parent, size, color, name, spin)
 	local holder = Instance.new("Frame")
@@ -165,7 +169,7 @@ function Library.GetIcon(parent, size, color, name, spin)
 	return holder
 end
 
--- ============ Galaxy-Hintergrund (Sterne + Nebel-Glow), gemeinsam für Loader & Window ============
+-- ============ Galaxy backdrop (stars + nebula glow), shared by Loader & Window ============
 
 local function buildGalaxyBackdrop(screenGui)
 	local backdrop = Instance.new("Frame")
@@ -372,7 +376,7 @@ function Library.CreateWindow(opts)
 	Subtitle.ZIndex = 6
 	Subtitle.Parent = Topbar
 
-	-- Launcher-Orb (sichtbar, wenn Fenster versteckt ist)
+	-- Launcher orb (visible while the window is hidden)
 	local Launcher = Instance.new("TextButton")
 	Launcher.AnchorPoint = Vector2.new(0, 0.5)
 	Launcher.Position = UDim2.new(0, 20, 0.5, 0)
@@ -527,8 +531,8 @@ function Library.CreateWindow(opts)
 	ContentHolder.ZIndex = 4
 	ContentHolder.Parent = Window
 
-	-- ============ Top-Right Overlay: Profil / FPS / Ping ============
-	-- UIListLayout sorgt dafür, dass sich nichts überlappt (auto-fließendes Layout statt fixer Offsets).
+	-- ============ Top-right overlay: profile / FPS / ping ============
+	-- UIListLayout keeps everything from overlapping (auto-flowing layout instead of fixed offsets).
 
 	local EXPANDED_HEIGHT = 52
 	local EXPANDED_WIDTH = 344
@@ -611,7 +615,7 @@ function Library.CreateWindow(opts)
 	placeLabel.TextColor3 = Theme.SubText
 	placeLabel.TextXAlignment = Enum.TextXAlignment.Left
 	placeLabel.TextTruncate = Enum.TextTruncate.AtEnd
-	placeLabel.Text = ("%d Spieler online"):format(#Players:GetPlayers())
+	placeLabel.Text = ("%d players online"):format(#Players:GetPlayers())
 	placeLabel.Parent = nameStack
 
 	divider(3)
@@ -717,7 +721,7 @@ function Library.CreateWindow(opts)
 	task.spawn(function()
 		while Overlay.Parent do
 			updatePing()
-			placeLabel.Text = ("%d Spieler online"):format(#Players:GetPlayers())
+			placeLabel.Text = ("%d players online"):format(#Players:GetPlayers())
 			task.wait(1)
 		end
 	end)
@@ -788,7 +792,7 @@ function Library.CreateWindow(opts)
 	overlayEyeBtn.MouseButton1Click:Connect(function() setOverlayExpanded(false) end)
 	overlayPill.MouseButton1Click:Connect(function() setOverlayExpanded(true) end)
 
-	-- ============ Tabs / Sections / Elemente ============
+	-- ============ Tabs / Sections / Elements ============
 
 	local tabs = {}
 	local firstTab = true
@@ -1292,7 +1296,7 @@ function Library.CreateWindow(opts)
 		end
 	end)
 
-	-- Pop-up-Öffnungsanimation
+	-- Pop-up opening animation
 	Window.BackgroundTransparency = 1
 	Window.Size = UDim2.fromOffset(FULL_SIZE.X.Offset * 0.85, FULL_SIZE.Y.Offset * 0.85)
 	tween(Window, { BackgroundTransparency = 0, Size = FULL_SIZE }, 0.45, Enum.EasingStyle.Back)
@@ -1305,9 +1309,14 @@ function Library.CreateWindow(opts)
 end
 
 -- ============ CreateLoader ============
--- Zeigt eine Auswahl-Liste von "Instanzen" (anderen Lua/ModuleScript-Dateien), bevor der
--- eigentliche Hub geladen wird. Jede Instanz definiert Name / Image / Description selbst
--- über die Instances-Tabelle, siehe Loader.client.lua.
+-- Shows a selection list of "instances" (other Lua/ModuleScript files) before the actual
+-- hub is loaded. Each instance defines its Name / Image / Description via the Instances
+-- table — see Loader.client.lua (Studio) or Bootstrap.lua (loadstring/GitHub).
+--
+-- Each entry supports two ways of providing the hub code:
+--   entry.Module = someModuleScriptInstance   -- require()'d directly (Studio setup)
+--   entry.Url    = "https://raw.githubusercontent.com/.../Hub.lua"  -- fetched + loadstring()'d
+--                                                                      on click (GitHub setup)
 
 function Library.CreateLoader(config)
 	config = config or {}
@@ -1383,7 +1392,7 @@ function Library.CreateLoader(config)
 	subtitleLabel.Font = FONT
 	subtitleLabel.TextSize = 11
 	subtitleLabel.TextColor3 = Theme.SubText
-	subtitleLabel.Text = config.Subtitle or "Wähle eine Instanz zum Laden"
+	subtitleLabel.Text = config.Subtitle or "Select an instance to load"
 	subtitleLabel.ZIndex = 4
 	subtitleLabel.Parent = header
 
@@ -1467,7 +1476,7 @@ function Library.CreateLoader(config)
 		loadBtn.Font = FONT_BOLD
 		loadBtn.TextSize = 12
 		loadBtn.TextColor3 = Theme.Text
-		loadBtn.Text = "Laden"
+		loadBtn.Text = "Load"
 		loadBtn.ZIndex = 5
 		loadBtn.Parent = card
 		corner(loadBtn, 8)
@@ -1477,26 +1486,38 @@ function Library.CreateLoader(config)
 		loadBtn.MouseLeave:Connect(function() tween(loadBtn, { BackgroundColor3 = Theme.Element }, 0.15) end)
 
 		loadBtn.MouseButton1Click:Connect(function()
-			if not entry.Module then
-				warn("[YunoHub] Diese Instanz hat kein Module referenziert: " .. tostring(entry.Name))
+			if not entry.Module and not entry.Url then
+				warn("[YunoHub] This instance has no Module or Url set: " .. tostring(entry.Name))
 				return
 			end
+
+			loadBtn.Text = entry.Url and "..." or "Load"
 			tween(panel, { BackgroundTransparency = 1, Size = panel.Size - UDim2.fromOffset(30, 30) }, 0.25)
 			tween(dim, { BackgroundTransparency = 1 }, 0.25)
 			task.delay(0.25, function()
 				screenGui:Destroy()
 				local ok, err = pcall(function()
-					local initFn = require(entry.Module)
+					local initFn
+					if entry.Module then
+						-- Studio setup: the hub is a ModuleScript instance already in the game
+						initFn = require(entry.Module)
+					else
+						-- loadstring/GitHub setup: fetch the hub's source and run it as a chunk.
+						-- Works because Hub files end in `return function(Library) ... end`,
+						-- exactly like a ModuleScript would.
+						local source = game:HttpGet(entry.Url)
+						initFn = loadstring(source)()
+					end
 					initFn(Library)
 				end)
 				if not ok then
-					warn("[YunoHub] Fehler beim Laden von '" .. tostring(entry.Name) .. "': " .. tostring(err))
+					warn("[YunoHub] Failed to load '" .. tostring(entry.Name) .. "': " .. tostring(err))
 				end
 			end)
 		end)
 	end
 
-	-- Pop-up-Öffnungsanimation
+	-- Pop-up opening animation
 	panel.Size = UDim2.fromOffset(420 * 0.85, 480 * 0.85)
 	tween(panel, { Size = UDim2.fromOffset(420, 480), BackgroundTransparency = 0 }, 0.45, Enum.EasingStyle.Back)
 

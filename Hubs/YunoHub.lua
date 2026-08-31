@@ -1,8 +1,8 @@
 --[[
-	Hubs/YunoHub.lua  (ModuleScript)
+	Hubs/YunoHub.lua  (ModuleScript, or a raw file fetched via loadstring/GitHub)
 
-	Beispiel-Hub, das die YunoHubLibrary benutzt. Gibt eine einzige Funktion zurück, die der
-	Loader mit der Library aufruft — darin baust du dein Fenster genau wie bei Rayfield:
+	Example hub that uses YunoHubLibrary. Returns a single function that the loader calls
+	with the Library — inside it you build your window exactly like with Rayfield:
 	Window:CreateTab(...) -> Tab:CreateSection(...) -> Section:CreateButton/Toggle/Slider/...
 ]]
 
@@ -18,44 +18,44 @@ return function(Library)
 	-- ===== Home =====
 	local homeTab = Window:CreateTab("Home", "home")
 
-	local welcomeSection = homeTab:CreateSection("Willkommen, " .. player.DisplayName, "Kleine Info-Übersicht für diese Session.")
-	welcomeSection:CreateLabel(("Server-Zeit: %s"):format(os.date("%H:%M:%S")))
-	welcomeSection:CreateLabel(("Place-ID: %d"):format(game.PlaceId))
-	welcomeSection:CreateButton("Sag Hallo", function()
-		Window:Notify("Hallo!", player.DisplayName .. ", schön dich zu sehen.", 3)
+	local welcomeSection = homeTab:CreateSection("Welcome, " .. player.DisplayName, "A quick info overview for this session.")
+	welcomeSection:CreateLabel(("Server time: %s"):format(os.date("%H:%M:%S")))
+	welcomeSection:CreateLabel(("Place ID: %d"):format(game.PlaceId))
+	welcomeSection:CreateButton("Say hi", function()
+		Window:Notify("Hi!", "Good to see you, " .. player.DisplayName .. ".", 3)
 	end)
 
-	local quickSection = homeTab:CreateSection("Schnellzugriff")
+	local quickSection = homeTab:CreateSection("Quick Access")
 	quickSection:CreateToggle("Auto-Farm", false, function(state)
-		Window:Notify("Auto-Farm", state and "Aktiviert" or "Deaktiviert", 2.5)
+		Window:Notify("Auto-Farm", state and "Enabled" or "Disabled", 2.5)
 	end)
-	quickSection:CreateSlider("Geschwindigkeit", 0, 100, 50, nil)
+	quickSection:CreateSlider("Speed", 0, 100, 50, nil)
 
 	-- ===== Presets =====
 	local presetsTab = Window:CreateTab("Presets", "sparkles")
-	local presetSection = presetsTab:CreateSection("Gespeicherte Presets", "Wähle eine Konfiguration, um sie sofort zu laden.")
+	local presetSection = presetsTab:CreateSection("Saved Presets", "Pick a configuration to apply it instantly.")
 	for _, presetName in ipairs({ "Speedrun", "Farming", "PvP" }) do
-		presetSection:CreateButton("Preset laden: " .. presetName, function()
-			Window:Notify("Preset geladen", presetName .. " wurde angewendet.", 2.5)
+		presetSection:CreateButton("Load preset: " .. presetName, function()
+			Window:Notify("Preset loaded", presetName .. " has been applied.", 2.5)
 		end)
 	end
 
 	-- ===== Stats =====
 	local statsTab = Window:CreateTab("Stats", "bar-chart")
-	local progressSection = statsTab:CreateSection("Fortschritt")
-	progressSection:CreateProgressBar("Level-XP", 68, "1 360 / 2 000")
-	progressSection:CreateProgressBar("Energie", 42)
-	progressSection:CreateProgressBar("Ruf bei Fraktion", 90, "Fast maximal")
+	local progressSection = statsTab:CreateSection("Progress")
+	progressSection:CreateProgressBar("Level XP", 68, "1,360 / 2,000")
+	progressSection:CreateProgressBar("Energy", 42)
+	progressSection:CreateProgressBar("Faction Reputation", 90, "Almost maxed")
 
 	-- ===== Settings =====
 	local settingsTab = Window:CreateTab("Settings", "settings")
-	local uiSection = settingsTab:CreateSection("Oberfläche")
-	uiSection:CreateToggle("UI-Sounds", true, nil)
-	uiSection:CreateDropdown("Akzentfarbe", { "Violett", "Magenta", "Cyan" }, "Violett", nil)
-	uiSection:CreateLabel("Tipp: RightShift oder der Launcher-Orb blenden das Fenster ein/aus.")
+	local uiSection = settingsTab:CreateSection("Interface")
+	uiSection:CreateToggle("UI Sounds", true, nil)
+	uiSection:CreateDropdown("Accent Color", { "Violet", "Magenta", "Cyan" }, "Violet", nil)
+	uiSection:CreateLabel("Tip: RightShift or the launcher orb toggle the window on/off.")
 
-	local dangerSection = settingsTab:CreateSection("Danger Zone", "Diese Aktion kann nicht rückgängig gemacht werden.")
-	dangerSection:CreateButton("Komplett unloaden", function()
+	local dangerSection = settingsTab:CreateSection("Danger Zone", "This action cannot be undone.")
+	dangerSection:CreateButton("Fully unload", function()
 		Window:Unload()
 	end)
 

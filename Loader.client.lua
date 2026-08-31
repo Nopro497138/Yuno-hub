@@ -1,22 +1,26 @@
 --[[
 	Loader.client.lua  (LocalScript)
 
-	Zeigt zuerst eine Auswahl-Liste ("welche Instanz willst du laden?"), bevor der eigentliche
-	Hub gebaut wird. Neue Hubs fügst du einfach unten in der Instances-Tabelle hinzu — Name,
-	Bild und Beschreibung sind frei wählbar, Module verweist auf dein eigenes ModuleScript
-	(das intern die YunoHubLibrary benutzt, um Tabs/Buttons/Slider usw. zu bauen).
+	Studio setup: shows the instance-selection screen first ("which instance do you want to
+	load?") before the actual hub is built. Add new hubs by adding an entry to the Instances
+	table below — Name, Image and Description are all freely chosen, Module points at your
+	own ModuleScript (which internally uses YunoHubLibrary to build tabs/buttons/sliders/etc).
 
-	Erwartete Struktur in Studio (z.B. unter StarterPlayerScripts):
+	If you instead want the "loadstring + GitHub" one-liner workflow (e.g. for pasting into
+	an executor), use Bootstrap.lua instead — same Library and Hub files, no Studio hierarchy
+	required.
+
+	Expected structure in Studio (e.g. under StarterPlayerScripts):
 		StarterPlayerScripts/
-			Loader (LocalScript)              <- diese Datei
+			Loader (LocalScript)              <- this file
 			YunoHubLibrary (ModuleScript)      <- YunoHubLibrary.lua
 			Hubs (Folder)
 				YunoHub (ModuleScript)         <- Hubs/YunoHub.lua
 				SecondInstance (ModuleScript)  <- Hubs/SecondInstance.lua
 
-	Image-Feld pro Instanz: entweder ein Icon-Name aus YunoHubLibrary.IconAssets
-	(z.B. "rocket", "skull", "shield" ...) für den Monogramm-/Icon-Platzhalter, oder direkt
-	eine eigene "rbxassetid://..." falls du schon ein hochgeladenes Bild hast.
+	Image field per instance: either an icon name from YunoHubLibrary.IconAssets
+	(e.g. "rocket", "skull", "shield" ...) for the monogram/icon placeholder, or a direct
+	"rbxassetid://..." if you already have an uploaded image.
 ]]
 
 local Library = require(script.Parent:WaitForChild("YunoHubLibrary"))
@@ -27,26 +31,26 @@ local Instances = {
 	{
 		Name = "Yuno Hub",
 		Image = "sparkles",
-		Description = "Das Haupt-Hub mit Home, Presets, Stats und Settings.",
+		Description = "The main hub with Home, Presets, Stats and Settings.",
 		Module = Hubs:WaitForChild("YunoHub"),
 	},
 	{
-		Name = "Zweite Instanz",
+		Name = "Second Instance",
 		Image = "skull",
-		Description = "Beispiel für ein zweites, unabhängiges Hub in derselben Auswahl.",
+		Description = "Example of a second, independent hub in the same selection list.",
 		Module = Hubs:WaitForChild("SecondInstance"),
 	},
-	-- Weitere eigene Instanzen einfach hier ergänzen:
+	-- Add your own instances here:
 	-- {
-	-- 	Name = "Mein Hub",
-	-- 	Image = "rocket", -- oder "rbxassetid://123456789"
-	-- 	Description = "Kurze Beschreibung, was dieses Hub macht.",
-	-- 	Module = Hubs:WaitForChild("MeinHub"),
+	-- 	Name = "My Hub",
+	-- 	Image = "rocket", -- or "rbxassetid://123456789"
+	-- 	Description = "Short description of what this hub does.",
+	-- 	Module = Hubs:WaitForChild("MyHub"),
 	-- },
 }
 
 Library.CreateLoader({
 	Title = "Yuno Hub",
-	Subtitle = "Wähle eine Instanz zum Laden",
+	Subtitle = "Select an instance to load",
 	Instances = Instances,
 })
