@@ -65,7 +65,7 @@ Library.IconAssets = {
 	skull = "rbxassetid://130801325845894", crosshair = "rbxassetid://105922158996884", shield = "rbxassetid://98009801247120", sword = "rbxassetid://75064125564088", zap = "rbxassetid://127256677933477", gift = "rbxassetid://123930470777740", trophy = "rbxassetid://135167728881368",
 	bell = "rbxassetid://87557547096119", lock = "rbxassetid://83161512836041", flame = "rbxassetid://78764037261724", gem = "rbxassetid://89956647859792", package = "rbxassetid://118869616844031", user = "rbxassetid://88727719972167", rocket = "rbxassetid://140102910130627",
 	crown = "rbxassetid://80389799340753", coins = "rbxassetid://126119394485906", key = "rbxassetid://81002896415776", wrench = "rbxassetid://92543314798081", map = "rbxassetid://93547411683695", heart = "rbxassetid://83891299559410", moon = "rbxassetid://110911670478833",
-	battery = "rbxassetid://115842063460165", save = "rbxassetid://134087985142574", ["clipboard-list"] = "rbxassetid://96622411563473", dice = "rbxassetid://97754275435971", wand = "rbxassetid://127285838323517", layers = "rbxassetid://89522153074978",
+	battery = "rbxassetid://115842063460165", save = "rbxassetid://134087985142574", ["clipboard-list"] = "rbxassetid://96622411563473", dice = "rbxassetid://100178092254276", wand = "rbxassetid://127285838323517", layers = "rbxassetid://89522153074978",
 	ghost = "rbxassetid://128556369425614", medal = "rbxassetid://106927143847925",
 }
 
