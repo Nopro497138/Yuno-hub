@@ -22,12 +22,12 @@ return function(Library)
 	welcomeSection:CreateLabel(("Server time: %s"):format(os.date("%H:%M:%S")))
 	welcomeSection:CreateLabel(("Place ID: %d"):format(game.PlaceId))
 	welcomeSection:CreateButton("Say hi", function()
-		Window:Notify("Hi!", "Good to see you, " .. player.DisplayName .. ".", 3)
+		Window:Notify("Hi!", "Good to see you, " .. player.DisplayName .. ".", 3, "sparkles")
 	end)
 
 	local quickSection = homeTab:CreateSection("Quick Access")
 	quickSection:CreateToggle("Auto-Farm", false, function(state)
-		Window:Notify("Auto-Farm", state and "Enabled" or "Disabled", 2.5)
+		Window:Notify("Auto-Farm", state and "Enabled" or "Disabled", 2.5, "zap")
 	end)
 	quickSection:CreateSlider("Speed", 0, 100, 50, nil)
 
@@ -36,7 +36,7 @@ return function(Library)
 	local presetSection = presetsTab:CreateSection("Saved Presets", "Pick a configuration to apply it instantly.")
 	for _, presetName in ipairs({ "Speedrun", "Farming", "PvP" }) do
 		presetSection:CreateButton("Load preset: " .. presetName, function()
-			Window:Notify("Preset loaded", presetName .. " has been applied.", 2.5)
+			Window:Notify("Preset loaded", presetName .. " has been applied.", 2.5, "wand")
 		end)
 	end
 

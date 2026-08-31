@@ -15,8 +15,11 @@ hub, then a window with tabs/sections/buttons/toggles/sliders/dropdowns.
 - `Hubs/YunoHub.lua`, `Hubs/SecondInstance.lua` — example hubs. Each file returns
   `function(Library) ... end` and builds its own window inside — this works unchanged whether
   it's `require()`'d (Studio) or fetched + `loadstring()`'d (GitHub).
-- `icons/*.svg` — 20 icon presets (home, settings, sparkles, bar-chart, eye, power, skull,
-  crosshair, shield, sword, zap, gift, trophy, bell, lock, flame, gem, package, user, rocket).
+- `icons/*.svg` + `icons/*.png` — 35 icon presets: home, settings, sparkles, bar-chart, eye,
+  power, skull, crosshair, shield, sword, zap, gift, trophy, bell, lock, flame, gem, package,
+  user, rocket, crown, coins, key, wrench, map, heart, moon, battery, save, clipboard-list,
+  dice, wand, layers, ghost, medal. The `.png` files (256x256, white on transparent) are ready
+  to upload directly as Roblox Decals; the `.svg` files are the source/reference versions.
 
 ## Two ways to load it
 
@@ -68,7 +71,7 @@ its card in the loader. It accepts two kinds of value:
   you upload a real asset (see "Making icons real" below), after which it automatically shows
   the uploaded picture instead.
 - **A direct `"rbxassetid://..."` string** — use this for a custom, per-hub thumbnail that
-  isn't one of the 20 presets (e.g. your own logo or banner art). Just upload any image as a
+  isn't one of the 35 presets (e.g. your own logo or banner art). Just upload any image as a
   Decal in Studio (Asset Manager → right-click → Upload, or via roblox.com/create) and paste
   the resulting `rbxassetid://<id>` directly as the `Image` value:
   ```lua
@@ -83,17 +86,34 @@ its card in the loader. It accepts two kinds of value:
 ## Making the icon presets real
 
 The icons are currently placeholders (circle + first letter) until real images are linked —
-Roblox only loads `ImageLabel` images via `rbxassetid://`, never directly from a GitHub URL.
+Roblox only loads `ImageLabel` images via `rbxassetid://`, never directly from a GitHub URL
+or a local file. `icons/*.png` are ready to upload as-is (256x256, white on transparent, so
+`ImageColor3` tinting still works); `icons/*.svg` are the source files, kept for reference /
+re-exporting at a different size.
 
-1. Upload each `.svg` from `icons/` in Studio (Asset Manager → Bulk Import, or upload as a
-   Decal on roblox.com/develop) and copy the resulting asset ID.
-2. In `YunoHubLibrary.lua`, fill in `Library.IconAssets`, e.g.:
+**Option A — manual, no setup (a couple minutes):**
+1. In Studio: Asset Manager → drag-and-drop all the `.png` files in (or right-click →
+   Bulk Import Files). Roblox uploads and moderates each one, usually within seconds.
+2. Copy each resulting asset ID from the Asset Manager.
+3. In `YunoHubLibrary.lua`, fill in `Library.IconAssets`, e.g.:
    ```lua
    home = "rbxassetid://123456789",
    ```
-3. Done — anywhere `"home"` is used as an icon name (tabs, loader cards, overlay), the real
+4. Done — anywhere `"home"` is used as an icon name (tabs, loader cards, overlay), the real
    image now shows automatically instead of the placeholder.
 
-You can keep the `.svg` files in your GitHub repo unchanged (e.g. as a source/reference
-folder for yourself or contributors) — Roblox itself can only use them after they've been
-uploaded.
+**Option B — scripted, uploads + fills in the IDs for you:** `scripts/upload_icons.py` uses
+Roblox's official Open Cloud API to upload every `icons/*.png`, then automatically patches the
+resulting `rbxassetid://...` values into `Library.IconAssets` in `YunoHubLibrary.lua`. You run
+it yourself with your own Open Cloud API key (from
+https://create.roblox.com/dashboard/credentials) — see the comment at the top of that script
+for the exact setup steps. Nothing about your account or key is shared with anyone but Roblox's
+API when you run it.
+
+## Icons in notifications
+
+`Window:Notify(title, content, duration, icon)` takes an optional 4th argument — any name
+from `Library.IconAssets` (`"zap"`, `"sparkles"`, `"shield"`, ...). When given, a small round
+icon badge appears to the left of the notification text; omit it for a plain text notification
+like before. See `Hubs/YunoHub.lua` for examples (`"sparkles"` on the hello button, `"zap"` on
+Auto-Farm, `"wand"` on preset loads).

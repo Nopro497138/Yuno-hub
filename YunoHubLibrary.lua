@@ -54,9 +54,12 @@ local FONT_BOLD = Enum.Font.GothamSemibold
 -- After uploading your icons (see /icons, GitHub link, Studio asset upload), fill in the
 -- matching rbxassetid here, e.g. home = "rbxassetid://123456789".
 Library.IconAssets = {
-	home = "", settings = "", sparkles = "", ["bar-chart"] = "", eye = "", power = "",
-	skull = "", crosshair = "", shield = "", sword = "", zap = "", gift = "", trophy = "",
-	bell = "", lock = "", flame = "", gem = "", package = "", user = "", rocket = "",
+	home = "", settings = "rbxassetid://83945949168154", sparkles = "rbxassetid://102939560874422", ["bar-chart"] = "rbxassetid://94379991850418", eye = "rbxassetid://90113970304999", power = "rbxassetid://79781370224359",
+	skull = "rbxassetid://130801325845894", crosshair = "rbxassetid://105922158996884", shield = "rbxassetid://98009801247120", sword = "rbxassetid://75064125564088", zap = "rbxassetid://127256677933477", gift = "rbxassetid://123930470777740", trophy = "rbxassetid://135167728881368",
+	bell = "rbxassetid://87557547096119", lock = "rbxassetid://83161512836041", flame = "rbxassetid://78764037261724", gem = "rbxassetid://89956647859792", package = "rbxassetid://118869616844031", user = "rbxassetid://88727719972167", rocket = "rbxassetid://140102910130627",
+	crown = "rbxassetid://80389799340753", coins = "rbxassetid://126119394485906", key = "rbxassetid://81002896415776", wrench = "rbxassetid://92543314798081", map = "rbxassetid://93547411683695", heart = "rbxassetid://83891299559410", moon = "rbxassetid://110911670478833",
+	battery = "rbxassetid://115842063460165", save = "rbxassetid://134087985142574", ["clipboard-list"] = "rbxassetid://96622411563473", dice = "rbxassetid://97754275435971", wand = "rbxassetid://127285838323517", layers = "rbxassetid://89522153074978",
+	ghost = "rbxassetid://128556369425614", medal = "rbxassetid://106927143847925",
 }
 
 -- ============ Generic helpers ============
@@ -235,7 +238,7 @@ local function attachNotify(screenGui)
 	NotifyLayout.Padding = UDim.new(0, 8)
 	NotifyLayout.Parent = NotifyHolder
 
-	return function(titleText, contentText, duration)
+	return function(titleText, contentText, duration, iconName)
 		duration = duration or 3.5
 		local notif = Instance.new("Frame")
 		notif.BackgroundColor3 = Theme.Section
@@ -246,10 +249,28 @@ local function attachNotify(screenGui)
 		faintStroke(notif, 0.75)
 		notif.Position = UDim2.fromOffset(300, 0)
 
+		local textOffset = 12
+		if iconName then
+			local iconHolder = Instance.new("Frame")
+			iconHolder.AnchorPoint = Vector2.new(0, 0.5)
+			iconHolder.Position = UDim2.new(0, 12, 0.5, 0)
+			iconHolder.Size = UDim2.fromOffset(28, 28)
+			iconHolder.Parent = notif
+			corner(iconHolder, "circle")
+			faintStroke(iconHolder, 0.4)
+			local innerIconHolder = Instance.new("Frame")
+			innerIconHolder.AnchorPoint = Vector2.new(0.5, 0.5)
+			innerIconHolder.Position = UDim2.fromScale(0.5, 0.5)
+			innerIconHolder.Size = UDim2.fromOffset(16, 16)
+			innerIconHolder.Parent = iconHolder
+			Library.GetIcon(innerIconHolder, 16, Theme.Violet, iconName)
+			textOffset = 12 + 28 + 10
+		end
+
 		local nTitle = Instance.new("TextLabel")
 		nTitle.BackgroundTransparency = 1
-		nTitle.Position = UDim2.new(0, 12, 0, 8)
-		nTitle.Size = UDim2.new(1, -24, 0, 18)
+		nTitle.Position = UDim2.new(0, textOffset, 0, 8)
+		nTitle.Size = UDim2.new(1, -textOffset - 12, 0, 18)
 		nTitle.Font = FONT_BOLD
 		nTitle.TextSize = 14
 		nTitle.TextColor3 = Theme.Text
@@ -259,8 +280,8 @@ local function attachNotify(screenGui)
 
 		local nContent = Instance.new("TextLabel")
 		nContent.BackgroundTransparency = 1
-		nContent.Position = UDim2.new(0, 12, 0, 28)
-		nContent.Size = UDim2.new(1, -24, 0, 24)
+		nContent.Position = UDim2.new(0, textOffset, 0, 28)
+		nContent.Size = UDim2.new(1, -textOffset - 12, 0, 24)
 		nContent.Font = FONT
 		nContent.TextSize = 12
 		nContent.TextColor3 = Theme.SubText
@@ -1277,8 +1298,8 @@ function Library.CreateWindow(opts)
 		return TabObject
 	end
 
-	function WindowObject:Notify(title, content, duration)
-		Notify(title, content, duration)
+	function WindowObject:Notify(title, content, duration, icon)
+		Notify(title, content, duration, icon)
 	end
 
 	function WindowObject:SetVisible(visible)
