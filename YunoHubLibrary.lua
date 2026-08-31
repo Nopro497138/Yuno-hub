@@ -61,7 +61,7 @@ Library.Logo = "rbxassetid://116890215589477"
 -- After uploading your icons (see /icons, GitHub link, Studio asset upload), fill in the
 -- matching rbxassetid here, e.g. home = "rbxassetid://123456789".
 Library.IconAssets = {
-	home = "rbxassetid://97597986086617", settings = "rbxassetid://97597986086617", sparkles = "rbxassetid://102939560874422", ["bar-chart"] = "rbxassetid://94379991850418", eye = "rbxassetid://90113970304999", power = "rbxassetid://79781370224359",
+	home = "rbxassetid://97597986086617", settings = "rbxassetid://83945949168154", sparkles = "rbxassetid://102939560874422", ["bar-chart"] = "rbxassetid://94379991850418", eye = "rbxassetid://90113970304999", power = "rbxassetid://79781370224359",
 	skull = "rbxassetid://130801325845894", crosshair = "rbxassetid://105922158996884", shield = "rbxassetid://98009801247120", sword = "rbxassetid://75064125564088", zap = "rbxassetid://127256677933477", gift = "rbxassetid://123930470777740", trophy = "rbxassetid://135167728881368",
 	bell = "rbxassetid://87557547096119", lock = "rbxassetid://83161512836041", flame = "rbxassetid://78764037261724", gem = "rbxassetid://89956647859792", package = "rbxassetid://118869616844031", user = "rbxassetid://88727719972167", rocket = "rbxassetid://140102910130627",
 	crown = "rbxassetid://80389799340753", coins = "rbxassetid://126119394485906", key = "rbxassetid://81002896415776", wrench = "rbxassetid://92543314798081", map = "rbxassetid://93547411683695", heart = "rbxassetid://83891299559410", moon = "rbxassetid://110911670478833",
