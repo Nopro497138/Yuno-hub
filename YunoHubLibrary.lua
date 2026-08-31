@@ -63,7 +63,7 @@ Library.Logo = "rbxassetid://116890215589477"
 Library.IconAssets = {
 	-- home left empty: no icon has been uploaded for it yet (a duplicate of the settings
 	-- texture id had accidentally ended up here from manual testing; removed).
-	home = "", settings = "rbxassetid://97597986086617", sparkles = "rbxassetid://102754611452699", ["bar-chart"] = "rbxassetid://72584118679611", eye = "rbxassetid://111297490539888", power = "rbxassetid://119903477110253",
+	home = "rbxassetid://97597986086617", settings = "rbxassetid://101286664810365", sparkles = "rbxassetid://102754611452699", ["bar-chart"] = "rbxassetid://72584118679611", eye = "rbxassetid://111297490539888", power = "rbxassetid://119903477110253",
 	skull = "rbxassetid://86616048766920", crosshair = "rbxassetid://96532914927004", shield = "rbxassetid://127802172197672", sword = "rbxassetid://73428970722324", zap = "rbxassetid://103552562650492", gift = "rbxassetid://129310286227038", trophy = "rbxassetid://131121362757837",
 	bell = "rbxassetid://116039089721439", lock = "rbxassetid://104499419466145", flame = "rbxassetid://94993715640377", gem = "rbxassetid://106659542169007", package = "rbxassetid://105533338080015", user = "rbxassetid://139749689373457", rocket = "rbxassetid://110365788058652",
 	crown = "rbxassetid://97108479956679", coins = "rbxassetid://87113891036132", key = "rbxassetid://128251505045577", wrench = "rbxassetid://84346277426426", map = "rbxassetid://96931562673365", heart = "rbxassetid://113057606722437", moon = "rbxassetid://112231190698084",
