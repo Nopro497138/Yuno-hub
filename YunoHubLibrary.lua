@@ -56,7 +56,7 @@ local FONT_BOLD = Enum.Font.GothamSemibold
 -- Upload your logo (e.g. the galaxy "Y") in Studio and paste its rbxassetid here. While it
 -- is empty the library falls back to the "sparkles" icon so nothing looks broken.
 -- Unlike the monochrome icons this is drawn in full colour, so artwork keeps its own look.
-Library.Logo = "rbxassetid://116890215589477"
+Library.Logo = "rbxassetid://100483966225175"
 
 -- After uploading your icons (see /icons, GitHub link, Studio asset upload), fill in the
 -- matching rbxassetid here, e.g. home = "rbxassetid://123456789".
