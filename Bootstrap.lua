@@ -33,19 +33,19 @@ local Instances = {
 	{
 		Name = "STAY INSIDE",
 		Image = "rbxassetid://77009249529372",
-		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
+		Description = "Script for STAY INSIDE, has autofarm, ESP and more! STATUS: KIND OF WORKING!",
 		Url = RAW_BASE .. "Hubs/StayInside.lua",
 	},
 	{
 		Name = "BONK & BLOCK",
 		Image = "rbxassetid://97173577563395",
-		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more!",
+		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more! STATUS: DONE!",
 		Url = RAW_BASE .. "Hubs/BonkBlock.lua",
 	},
 	{
 		Name = "RUNAWAYS",
 		Image = "rbxassetid://102352181233660",
-		Description = "Script for RUNAWAYS! Has Auto collect, ESP, Car mods and more!",
+		Description = "Script for RUNAWAYS! Has Auto collect, ESP, Car mods and more! STATUS: BROKEN/DONT USE!",
 		Url = RAW_BASE .. "Hubs/runaways.lua",
 		AutoLoad = { PlaceIds = { 117311404196294 } }
 	},
