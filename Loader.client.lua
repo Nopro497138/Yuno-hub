@@ -29,10 +29,16 @@ local Hubs = script.Parent:WaitForChild("Hubs")
 
 local Instances = {
 {
-		Name = "Stay Inside",
+		Name = "STAY INSIDE",
 		Image = "rbxassetid://77009249529372",
 		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
 		Module = Hubs:WaitForChild("StayInside"),
+	},
+	{
+		Name = "BONK & BLOCK",
+		Image = "rbxassetid://97173577563395",
+		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more!",
+		Module = Hubs:WaitForChild("BonkBlock"),
 	},
 	-- Add your own instances here:
 	-- {
