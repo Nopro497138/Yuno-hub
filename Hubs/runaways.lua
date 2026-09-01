@@ -1,5 +1,5 @@
 --[[
-    Runaways Hub – v2.1
+    Runaways Hub – v2.2
     Professional utility hub for Roblox.
     Features: Auto-Loot, ESP (Loot/NPCs/Vehicles), Vehicle Property Tweaks,
     Gas Level Fix, Player Mods (WalkSpeed, JumpPower, Fly, Aimbot).
@@ -22,7 +22,7 @@ return function(Library)
     -- Window
     local Window = Library.CreateWindow({
         Title = "Runaways Hub",
-        Subtitle = "v2.1 · Advanced Utility"
+        Subtitle = "v2.2 · Advanced Utility"
     })
 
     -- ========================== Utility Functions ==========================
@@ -88,31 +88,41 @@ return function(Library)
     local autoLootTask = nil
     local collectedLoot = {} -- track collected loot instances
 
+    -- Returns the number of loot items successfully collected
     local function CollectLoot()
         local lootFolder = Workspace:FindFirstChild("Loot")
-        if not lootFolder then return end
+        if not lootFolder then return 0 end
 
+        local count = 0
         for _, model in ipairs(lootFolder:GetChildren()) do
             if model:IsA("Model") and not collectedLoot[model] then
                 local primaryPart = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart")
                 if primaryPart then
-                    -- Teleport to loot
-                    HumanoidRootPart.CFrame = primaryPart.CFrame + Vector3.new(0, 1, 0)
+                    -- Teleport to a position 3 studs away from the loot, facing it
+                    local lootPos = primaryPart.Position
+                    local dirToLoot = (lootPos - HumanoidRootPart.Position).Unit
+                    local teleportPos = lootPos - dirToLoot * 3 + Vector3.new(0, 1, 0) -- offset a bit away and up
+                    HumanoidRootPart.CFrame = CFrame.new(teleportPos, lootPos)
                     task.wait(0.1)
-                    -- Look at it
+
+                    -- Look at the loot with the camera
                     Workspace.CurrentCamera.CFrame = CFrame.new(
                         Workspace.CurrentCamera.CFrame.Position,
-                        primaryPart.Position
+                        lootPos
                     )
+
                     -- Press E
                     _G._LootTarget = model
                     PressE()
                     task.wait(0.2)
                     _G._LootTarget = nil
+
                     collectedLoot[model] = true
+                    count = count + 1
                 end
             end
         end
+        return count
     end
 
     mainSection:CreateToggle("Auto-Loot", false, function(state)
@@ -120,7 +130,7 @@ return function(Library)
         if state then
             autoLootTask = task.spawn(function()
                 while autoLootEnabled and Window.Instance and Window.Instance.Parent do
-                    CollectLoot()
+                    CollectLoot() -- silently collect
                     task.wait(0.5)
                 end
             end)
@@ -132,9 +142,44 @@ return function(Library)
         end
     end, "autoLoot")
 
+    -- Manual collect button with notifications
     mainSection:CreateButton("Collect All Loot (Once)", function()
-        CollectLoot()
-        Window:Notify("Loot", "All available loot collected.", 2, "sparkles")
+        local lootFolder = Workspace:FindFirstChild("Loot")
+        if not lootFolder then
+            Window:Notify("Loot", "No loot folder found.", 2, "warning")
+            return
+        end
+
+        local allLoot = {}
+        for _, child in ipairs(lootFolder:GetChildren()) do
+            if child:IsA("Model") then table.insert(allLoot, child) end
+        end
+
+        if #allLoot == 0 then
+            Window:Notify("Loot", "No loot available.", 2, "warning")
+            return
+        end
+
+        -- Check if all loot is already collected
+        local uncollected = 0
+        for _, model in ipairs(allLoot) do
+            if not collectedLoot[model] then
+                uncollected = uncollected + 1
+            end
+        end
+
+        if uncollected == 0 then
+            Window:Notify("Loot", "All loot already collected.", 2, "info")
+            -- Optionally reset collected list? We'll let user toggle auto off/on to reset.
+            return
+        end
+
+        local collected = CollectLoot()
+        if collected > 0 then
+            Window:Notify("Loot", string.format("Collected %d loot items.", collected), 2, "sparkles")
+        else
+            Window:Notify("Loot", "No new loot could be collected.", 2, "warning")
+        end
     end)
 
     -- ========================== ESP Tab ==========================
@@ -507,7 +552,6 @@ return function(Library)
     vehicleSection:CreateButton("Refresh Vehicle List", function()
         local newList = GetVehiclesWithProperties()
         Window:Notify("Vehicles", "New list: " .. table.concat(newList, ", "), 3, "refresh")
-        -- Note: dropdown options are not dynamically updated, so we advise restart.
         Window:Notify("Info", "Please restart the hub to refresh the dropdown.", 3, "info")
     end)
 
