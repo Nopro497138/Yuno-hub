@@ -9,11 +9,6 @@
 	screen (with all its stars/glow/animations already running) — the actual Hub file is only
 	fetched and executed once you click "Load" on its card, exactly like the Studio setup.
 
-	Auto-load: give an entry `AutoLoad = { PlaceIds = { 123456789 } }` to skip the picker
-	entirely and boot straight into that hub whenever the current game's PlaceId matches —
-	e.g. so your hub launches immediately when someone joins your own game, with the loader
-	screen never shown at all. Leave it out for entries you want to keep picking manually.
-
 	Note: `loadstring` is disabled by default in real, live Roblox game clients/servers — it
 	only works in environments that provide their own (an executor, for example). If you paste
 	this into a normal Script/LocalScript inside your own published game, it will error with
@@ -36,17 +31,16 @@ local Library = fetchLibrary()
 
 local Instances = {
 	{
-		Name = "Yuno Hub",
-		Image = "sparkles",
-		Description = "The main hub with Home, Presets, Stats and Settings.",
-		Url = RAW_BASE .. "Hubs/YunoHub.lua",
-		-- AutoLoad = { PlaceIds = { 123456789 } }, -- uncomment + fill in to auto-launch this one
+		Name = "STAY INSIDE",
+		Image = "rbxassetid://77009249529372",
+		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
+		Url = RAW_BASE .. "Hubs/StayInside.lua",
 	},
 	{
-		Name = "Second Instance",
-		Image = "skull",
-		Description = "Example of a second, independent hub in the same selection list.",
-		Url = RAW_BASE .. "Hubs/SecondInstance.lua",
+		Name = "BONK & BLOCK",
+		Image = "rbxassetid://97173577563395",
+		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more!",
+		Url = RAW_BASE .. "Hubs/BonkBlock.lua",
 	},
 	-- Add your own instances here:
 	-- {
