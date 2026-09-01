@@ -34,7 +34,7 @@ local Instances = {
 		Name = "Stay Inside",
 		Image = "rbxassetid://77009249529372",
 		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
-		Module = Hubs:WaitForChild("StayInside"),
+		Url = RAW_BASE .. "Hubs/StayInside.lua",
 	},
 	-- Add your own instances here:
 	-- {
