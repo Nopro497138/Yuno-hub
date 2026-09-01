@@ -48,8 +48,11 @@ return function(Library)
     -- Drawing API is preferred for skeleton/box/tracer ESP.
     -- Highlight/BillboardGui are used for object ESP because they are more
     -- compatible with different executors.
-    local DrawingAvailable = type(Drawing) == "table"
-        and type(Drawing.new) == "function"
+    local DrawingAvailable = false
+    pcall(function()
+        DrawingAvailable = Drawing ~= nil
+            and type(Drawing.new) == "function"
+    end)
 
     -- ============================================================
     -- Window
@@ -401,38 +404,35 @@ return function(Library)
         for model, bundle in pairs(espObjects) do
             if not model or not model.Parent then
                 destroyObjectESP(model)
-                continue
-            end
+            else
+                local part = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart", true)
+                if part then
 
-            local part = model.PrimaryPart or model:FindFirstChildWhichIsA("BasePart", true)
-            if not part then
-                destroyObjectESP(model)
-                continue
-            end
+                    local distance = distanceFromCharacter(part)
+                    local visible = distance <= State.ObjectMaxDistance
 
-            local distance = distanceFromCharacter(part)
-            local visible = distance <= State.ObjectMaxDistance
+                    if bundle.Billboard then
+                        bundle.Billboard.Enabled = visible
 
-            if bundle.Billboard then
-                bundle.Billboard.Enabled = visible
+                        local text = objectLabel(model)
 
-                local text = objectLabel(model)
+                        if State.ObjectDistance then
+                            text = ("%s  [%dm]"):format(text, math.floor(distance + 0.5))
+                        end
 
-                if State.ObjectDistance then
-                    text = ("%s  [%dm]"):format(text, math.floor(distance + 0.5))
+                        if not State.ObjectNames then
+                            text = State.ObjectDistance
+                                and ("[%dm]"):format(math.floor(distance + 0.5))
+                                or ""
+                        end
+
+                        bundle.Label.Text = text
+                    end
+
+                    if bundle.Highlight then
+                        bundle.Highlight.Enabled = visible
+                    end
                 end
-
-                if not State.ObjectNames then
-                    text = State.ObjectDistance
-                        and ("[%dm]"):format(math.floor(distance + 0.5))
-                        or ""
-                end
-
-                bundle.Label.Text = text
-            end
-
-            if bundle.Highlight then
-                bundle.Highlight.Enabled = visible
             end
         end
     end
@@ -1039,7 +1039,7 @@ return function(Library)
 
     local espSection = espTab:CreateSection(
         "Player ESP",
-        Drawing-ESP mit Name, Box, Healthbar, Distance, Tracer und Skeleton.
+        "Drawing-ESP mit Name, Box, Healthbar, Distance, Tracer und Skeleton."
     )
 
     espSection:CreateToggle(
