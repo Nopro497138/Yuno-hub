@@ -31,16 +31,10 @@ local Library = fetchLibrary()
 
 local Instances = {
 	{
-		Name = "Yuno Hub",
-		Image = "sparkles",
-		Description = "The main hub with Home, Presets, Stats and Settings.",
-		Url = RAW_BASE .. "Hubs/YunoHub.lua",
-	},
-	{
-		Name = "Second Instance",
-		Image = "skull",
-		Description = "Example of a second, independent hub in the same selection list.",
-		Url = RAW_BASE .. "Hubs/SecondInstance.lua",
+		Name = "Stay Inside",
+		Image = "rbxassetid://77009249529372",
+		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
+		Module = Hubs:WaitForChild("StayInside"),
 	},
 	-- Add your own instances here:
 	-- {
