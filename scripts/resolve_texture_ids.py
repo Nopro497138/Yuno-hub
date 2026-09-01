@@ -8,17 +8,52 @@ Why this exists: Decal uploads (what scripts/upload_icons.py produces) return a 
 asset ID. Roblox's ImageLabel.Image sometimes needs the Image/texture ID that the Decal
 wraps internally instead -- that mismatch is why the icons rendered as blank placeholders.
 
-How the mapping below was produced: there is no safe way to resolve Decal -> texture ID
-over plain HTTP without a full Roblox account session cookie, and this project does not
-handle that credential (same reasoning as scripts/upload_icons.py only ever asking for an
-Open Cloud API key, never a login). The one safe, official way is `InsertService:LoadAsset`
-run inside Roblox Studio, which resolves each Decal to a real `Decal` instance and reads
-its `.Texture` property directly -- authenticated by the Studio session, no cookie needed.
-That's what filled in TEXTURE_IDS below (run once, interactively, via the Studio MCP).
+How to (re-)produce the mapping below yourself: there is no safe way to resolve Decal ->
+texture ID over plain HTTP without a full Roblox account session cookie, and this project
+does not handle that credential (same reasoning as scripts/upload_icons.py only ever asking
+for an Open Cloud API key, never a login). The one safe, official way is
+`InsertService:LoadAsset` run inside Roblox Studio, which resolves each Decal to a real
+`Decal` instance and reads its `.Texture` property directly -- authenticated by your own
+Studio session, no cookie involved.
+
+Steps:
+  1. Open Roblox Studio (any place -- this doesn't touch the place itself).
+  2. Open the Command Bar (View tab -> Command Bar) and paste in the Luau snippet below,
+     with DECAL_IDS filled in from your own Library.IconAssets values (strip the
+     "rbxassetid://" prefix, keep just the numbers). Run it.
+  3. It prints one JSON line. Copy it, then paste it as the value of TEXTURE_IDS below
+     (or run `python -c "import json,sys; print(json.load(open('out.json')))"` if you saved
+     it to a file instead).
+  4. Run this script: `python scripts/resolve_texture_ids.py`.
+
+```lua
+local InsertService = game:GetService("InsertService")
+local HttpService = game:GetService("HttpService")
+
+local DECAL_IDS = {
+    -- name = decalId, ... (copy from Library.IconAssets, numbers only)
+}
+
+local results, errors = {}, {}
+for name, id in pairs(DECAL_IDS) do
+    local ok, err = pcall(function()
+        local asset = InsertService:LoadAsset(id)
+        local decal = asset:FindFirstChildWhichIsA("Decal", true)
+        if not decal then error("no Decal instance found inside loaded asset") end
+        local textureId = decal.Texture:match("(%d+)")
+        if not textureId then error("Texture had no numeric id: " .. tostring(decal.Texture)) end
+        results[name] = textureId
+        asset:Destroy()
+    end)
+    if not ok then errors[name] = tostring(err) end
+    task.wait(0.6) -- InsertService is rate-limited; don't hammer it
+end
+
+print(HttpService:JSONEncode({ results = results, errors = errors }))
+```
 
 This script itself is plain Python: it only rewrites the .lua file's rbxassetid values.
-Run it again by hand whenever you upload new icons and re-resolve their texture IDs the
-same way (see the README's "Making the icon presets real" section).
+Run the Luau snippet again whenever you upload new icons and need fresh texture IDs.
 """
 
 import re

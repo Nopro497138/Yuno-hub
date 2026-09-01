@@ -15,11 +15,10 @@ hub, then a window with tabs/sections/buttons/toggles/sliders/dropdowns.
 - `Hubs/YunoHub.lua`, `Hubs/SecondInstance.lua` — example hubs. Each file returns
   `function(Library) ... end` and builds its own window inside — this works unchanged whether
   it's `require()`'d (Studio) or fetched + `loadstring()`'d (GitHub).
-- `icons/*.svg` + `icons/*.png` — 35 icon presets: home, settings, sparkles, bar-chart, eye,
-  power, skull, crosshair, shield, sword, zap, gift, trophy, bell, lock, flame, gem, package,
-  user, rocket, crown, coins, key, wrench, map, heart, moon, battery, save, clipboard-list,
-  dice, wand, layers, ghost, medal. The `.png` files (256x256, white on transparent) are ready
-  to upload directly as Roblox Decals; the `.svg` files are the source/reference versions.
+- `icons/*.png` — 35 icon presets: home, settings, sparkles, bar-chart, eye, power, skull,
+  crosshair, shield, sword, zap, gift, trophy, bell, lock, flame, gem, package, user, rocket,
+  crown, coins, key, wrench, map, heart, moon, battery, save, clipboard-list, dice, wand,
+  layers, ghost, medal — 256x256, white on transparent, ready to upload as Roblox Decals.
 
 ## Two ways to load it
 
@@ -83,6 +82,27 @@ its card in the loader. It accepts two kinds of value:
   },
   ```
 
+## Auto-loading a hub on join
+
+Add `AutoLoad = { PlaceIds = { ... } }` to an instance entry to skip the picker screen
+entirely for that game — the moment `Library.CreateLoader` runs, it checks the current
+`game.PlaceId` against every entry's `AutoLoad.PlaceIds`, and if one matches, that hub is
+built immediately with no loader UI ever shown:
+
+```lua
+{
+    Name = "My Hub",
+    Image = "rocket",
+    Description = "...",
+    Module = Hubs.MyHub,
+    AutoLoad = { PlaceIds = { 123456789, 987654321 } }, -- your game's place ID(s)
+},
+```
+
+Entries without `AutoLoad` behave exactly as before — you only need this on the one entry
+you want to launch automatically. If no entry matches the current place, the picker shows
+normally. `PlaceIds` also accepts a single number instead of a table if you only have one.
+
 ## Hub logo
 
 `Library.Logo` is the branding image used in the loader topbar, the window topbar and the
@@ -100,8 +120,7 @@ While it is empty the library falls back to the `sparkles` icon.
 The icons are currently placeholders (circle + first letter) until real images are linked —
 Roblox only loads `ImageLabel` images via `rbxassetid://`, never directly from a GitHub URL
 or a local file. `icons/*.png` are ready to upload as-is (256x256, white on transparent, so
-`ImageColor3` tinting still works); `icons/*.svg` are the source files, kept for reference /
-re-exporting at a different size.
+`ImageColor3` tinting still works).
 
 **Option A — manual, no setup (a couple minutes):**
 1. In Studio: Asset Manager → drag-and-drop all the `.png` files in (or right-click →
@@ -121,6 +140,15 @@ it yourself with your own Open Cloud API key (from
 https://create.roblox.com/dashboard/credentials) — see the comment at the top of that script
 for the exact setup steps. Nothing about your account or key is shared with anyone but Roblox's
 API when you run it.
+
+**Gotcha (affects Option B):** assets uploaded as a Decal get a Decal asset ID, but
+`ImageLabel.Image` sometimes needs the *texture* ID that Decal wraps internally — using the
+Decal ID directly can render as a blank placeholder even though the upload succeeded. There's
+no safe way to resolve that over plain HTTP without a full account session cookie (which this
+project never handles). The one safe fix: open Roblox Studio, then run
+`scripts/resolve_texture_ids.py`'s companion Luau snippet (see the comment at the top of that
+script) via the command bar or a plugin — it uses `InsertService:LoadAsset` to read each
+Decal's real texture ID, authenticated by your own Studio session, no cookie involved.
 
 ## Presets
 

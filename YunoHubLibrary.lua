@@ -446,16 +446,16 @@ function Library.CreateWindow(opts)
 
 	local titleIconHolder = Instance.new("Frame")
 	titleIconHolder.BackgroundTransparency = 1
-	titleIconHolder.Position = UDim2.new(0, 12, 0.5, -10)
-	titleIconHolder.Size = UDim2.fromOffset(20, 20)
+	titleIconHolder.Position = UDim2.new(0, 8, 0, 4)
+	titleIconHolder.Size = UDim2.fromOffset(36, 36)
 	titleIconHolder.ZIndex = 6
 	titleIconHolder.Parent = Topbar
-	Library.GetLogo(titleIconHolder, 20, Theme.Cyan)
+	Library.GetLogo(titleIconHolder, 36, Theme.Cyan)
 
 	local Title = Instance.new("TextLabel")
 	Title.BackgroundTransparency = 1
-	Title.Position = UDim2.new(0, 40, 0, 2)
-	Title.Size = UDim2.new(0.5, 0, 0, 18)
+	Title.Position = UDim2.new(0, 52, 0, 2)
+	Title.Size = UDim2.new(0.5, -12, 0, 18)
 	Title.Font = FONT_BOLD
 	Title.TextSize = 15
 	Title.TextColor3 = Theme.Text
@@ -466,8 +466,8 @@ function Library.CreateWindow(opts)
 
 	local Subtitle = Instance.new("TextLabel")
 	Subtitle.BackgroundTransparency = 1
-	Subtitle.Position = UDim2.new(0, 40, 0, 20)
-	Subtitle.Size = UDim2.new(0.5, 0, 0, 16)
+	Subtitle.Position = UDim2.new(0, 52, 0, 20)
+	Subtitle.Size = UDim2.new(0.5, -12, 0, 16)
 	Subtitle.Font = FONT
 	Subtitle.TextSize = 11
 	Subtitle.TextColor3 = Theme.SubText
@@ -480,7 +480,7 @@ function Library.CreateWindow(opts)
 	local Launcher = Instance.new("TextButton")
 	Launcher.AnchorPoint = Vector2.new(0, 0.5)
 	Launcher.Position = UDim2.new(0, 20, 0.5, 0)
-	Launcher.Size = UDim2.fromOffset(46, 46)
+	Launcher.Size = UDim2.fromOffset(54, 54)
 	Launcher.BackgroundColor3 = Theme.Element
 	Launcher.AutoButtonColor = false
 	Launcher.Text = ""
@@ -494,10 +494,10 @@ function Library.CreateWindow(opts)
 	launcherIconHolder.BackgroundTransparency = 1
 	launcherIconHolder.AnchorPoint = Vector2.new(0.5, 0.5)
 	launcherIconHolder.Position = UDim2.fromScale(0.5, 0.5)
-	launcherIconHolder.Size = UDim2.fromOffset(22, 22)
+	launcherIconHolder.Size = UDim2.fromOffset(36, 36)
 	launcherIconHolder.ZIndex = 11
 	launcherIconHolder.Parent = Launcher
-	Library.GetLogo(launcherIconHolder, 22, Theme.Cyan)
+	Library.GetLogo(launcherIconHolder, 36, Theme.Cyan)
 
 	local windowVisible = true
 	local function setWindowVisible(visible, animate)
@@ -1938,9 +1938,58 @@ end
 --   entry.Url    = "https://raw.githubusercontent.com/.../Hub.lua"  -- fetched + loadstring()'d
 --                                                                      on click (GitHub setup)
 
+-- Resolves one instance entry's hub code and runs it, exactly the same way whether it came
+-- from the picker's "Load" button or from an auto-load match. Shared so both paths can never
+-- drift apart.
+local function runInstance(Library, entry)
+	local ok, err = pcall(function()
+		local initFn
+		if entry.Module then
+			-- Studio setup: the hub is a ModuleScript instance already in the game
+			initFn = require(entry.Module)
+		else
+			-- loadstring/GitHub setup: fetch the hub's source and run it as a chunk.
+			-- Works because Hub files end in `return function(Library) ... end`,
+			-- exactly like a ModuleScript would.
+			local source = game:HttpGet(entry.Url)
+			initFn = loadstring(source)()
+		end
+		initFn(Library)
+	end)
+	if not ok then
+		warn("[YunoHub] Failed to load '" .. tostring(entry.Name) .. "': " .. tostring(err))
+	end
+end
+
+-- An instance with `AutoLoad = { PlaceIds = { 123456, 789012 } }` skips the picker entirely
+-- and boots straight into that hub when the current game's PlaceId matches -- e.g. so your
+-- hub launches immediately when a player joins that specific game, with no loader screen at
+-- all. Returns the matching entry, or nil if none of the instances claim this PlaceId.
+local function findAutoLoadEntry(instances)
+	for _, entry in ipairs(instances) do
+		local autoLoad = entry.AutoLoad
+		if autoLoad and autoLoad.PlaceIds then
+			local placeIds = autoLoad.PlaceIds
+			if type(placeIds) == "number" then placeIds = { placeIds } end
+			for _, placeId in ipairs(placeIds) do
+				if placeId == game.PlaceId then
+					return entry
+				end
+			end
+		end
+	end
+	return nil
+end
+
 function Library.CreateLoader(config)
 	config = config or {}
 	local instances = config.Instances or {}
+
+	local autoEntry = findAutoLoadEntry(instances)
+	if autoEntry then
+		runInstance(Library, autoEntry)
+		return nil
+	end
 
 	local screenGui = Instance.new("ScreenGui")
 	screenGui.Name = "YunoHubLoader"
@@ -2015,16 +2064,16 @@ function Library.CreateLoader(config)
 
 	local logoHolder = Instance.new("Frame")
 	logoHolder.BackgroundTransparency = 1
-	logoHolder.Position = UDim2.new(0, 12, 0.5, -10)
-	logoHolder.Size = UDim2.fromOffset(20, 20)
+	logoHolder.Position = UDim2.new(0, 8, 0, 4)
+	logoHolder.Size = UDim2.fromOffset(36, 36)
 	logoHolder.ZIndex = 5
 	logoHolder.Parent = Topbar
-	Library.GetLogo(logoHolder, 20, Theme.Cyan)
+	Library.GetLogo(logoHolder, 36, Theme.Cyan)
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.BackgroundTransparency = 1
-	titleLabel.Position = UDim2.new(0, 40, 0, 2)
-	titleLabel.Size = UDim2.new(1, -80, 0, 18)
+	titleLabel.Position = UDim2.new(0, 52, 0, 2)
+	titleLabel.Size = UDim2.new(1, -92, 0, 18)
 	titleLabel.Font = FONT_BOLD
 	titleLabel.TextSize = 15
 	titleLabel.TextColor3 = Theme.Text
@@ -2036,8 +2085,8 @@ function Library.CreateLoader(config)
 
 	local subtitleLabel = Instance.new("TextLabel")
 	subtitleLabel.BackgroundTransparency = 1
-	subtitleLabel.Position = UDim2.new(0, 40, 0, 20)
-	subtitleLabel.Size = UDim2.new(1, -80, 0, 16)
+	subtitleLabel.Position = UDim2.new(0, 52, 0, 20)
+	subtitleLabel.Size = UDim2.new(1, -92, 0, 16)
 	subtitleLabel.Font = FONT
 	subtitleLabel.TextSize = 11
 	subtitleLabel.TextColor3 = Theme.SubText
@@ -2165,23 +2214,7 @@ function Library.CreateLoader(config)
 
 			loadBtn.Text = entry.Url and "..." or "Load"
 			closePanel(function()
-				local ok, err = pcall(function()
-					local initFn
-					if entry.Module then
-						-- Studio setup: the hub is a ModuleScript instance already in the game
-						initFn = require(entry.Module)
-					else
-						-- loadstring/GitHub setup: fetch the hub's source and run it as a chunk.
-						-- Works because Hub files end in `return function(Library) ... end`,
-						-- exactly like a ModuleScript would.
-						local source = game:HttpGet(entry.Url)
-						initFn = loadstring(source)()
-					end
-					initFn(Library)
-				end)
-				if not ok then
-					warn("[YunoHub] Failed to load '" .. tostring(entry.Name) .. "': " .. tostring(err))
-				end
+				runInstance(Library, entry)
 			end)
 		end)
 	end

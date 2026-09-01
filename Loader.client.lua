@@ -21,6 +21,11 @@
 	Image field per instance: either an icon name from YunoHubLibrary.IconAssets
 	(e.g. "rocket", "skull", "shield" ...) for the monogram/icon placeholder, or a direct
 	"rbxassetid://..." if you already have an uploaded image.
+
+	Auto-load: give an entry `AutoLoad = { PlaceIds = { 123456789 } }` to skip this picker
+	entirely and boot straight into that hub whenever a player is in one of those places —
+	e.g. so your hub launches immediately when someone joins your own game, with the loader
+	screen never shown at all. Leave it out for entries you want to keep picking manually.
 ]]
 
 local Library = require(script.Parent:WaitForChild("YunoHubLibrary"))
@@ -28,17 +33,18 @@ local Library = require(script.Parent:WaitForChild("YunoHubLibrary"))
 local Hubs = script.Parent:WaitForChild("Hubs")
 
 local Instances = {
-{
-		Name = "STAY INSIDE",
-		Image = "rbxassetid://77009249529372",
-		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
-		Module = Hubs:WaitForChild("StayInside"),
+	{
+		Name = "Yuno Hub",
+		Image = "sparkles",
+		Description = "The main hub with Home, Presets, Stats and Settings.",
+		Module = Hubs:WaitForChild("YunoHub"),
+		-- AutoLoad = { PlaceIds = { 123456789 } }, -- uncomment + fill in to auto-launch this one
 	},
 	{
-		Name = "BONK & BLOCK",
-		Image = "rbxassetid://97173577563395",
-		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more!",
-		Module = Hubs:WaitForChild("BonkBlock"),
+		Name = "Second Instance",
+		Image = "skull",
+		Description = "Example of a second, independent hub in the same selection list.",
+		Module = Hubs:WaitForChild("SecondInstance"),
 	},
 	-- Add your own instances here:
 	-- {
