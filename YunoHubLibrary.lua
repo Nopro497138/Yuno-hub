@@ -25,6 +25,7 @@ local RunService = game:GetService("RunService")
 local Players = game:GetService("Players")
 local StatsService = game:GetService("Stats")
 local HttpService = game:GetService("HttpService")
+local ContentProvider = game:GetService("ContentProvider")
 
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
@@ -177,13 +178,12 @@ function Library.GetLogo(parent, size, fallbackColor)
 		img.Parent = holder
 
 		task.spawn(function()
-			local waited = 0
-			while waited < 5 do
-				if not img.Parent then return end
-				if img.IsLoaded then return end
-				task.wait(0.25)
-				waited += 0.25
-			end
+			if not img.Parent then return end
+			-- PreloadAsync yields until Roblox has actually attempted the fetch (success or
+			-- failure) instead of racing a fixed timeout, so a load that's merely a bit slow
+			-- (e.g. this being the first image requested this session) can't get mistaken
+			-- for a failure and get stuck showing the fallback forever.
+			pcall(function() ContentProvider:PreloadAsync({ img }) end)
 			if img.Parent and not img.IsLoaded then
 				img:Destroy()
 				Library.GetIcon(holder, size, fallbackColor or Theme.Cyan, "sparkles")
@@ -215,15 +215,11 @@ function Library.GetIcon(parent, size, color, name, spin)
 		-- An asset ID can be valid yet still never render (most commonly a Decal ID where
 		-- an Image ID is required, or one still awaiting moderation). Rather than leaving a
 		-- blank gap in the UI, wait for the load and quietly swap in the monogram if it
-		-- never arrives.
+		-- never arrives. PreloadAsync yields for the actual fetch result instead of racing
+		-- a fixed timeout, so a load that's merely slow can't be mistaken for a failure.
 		task.spawn(function()
-			local waited = 0
-			while waited < 5 do
-				if not img.Parent then return end
-				if img.IsLoaded then return end
-				task.wait(0.25)
-				waited += 0.25
-			end
+			if not img.Parent then return end
+			pcall(function() ContentProvider:PreloadAsync({ img }) end)
 			if img.Parent and not img.IsLoaded then
 				img:Destroy()
 				drawMonogram(holder, size, color, name)
@@ -447,10 +443,10 @@ function Library.CreateWindow(opts)
 	local titleIconHolder = Instance.new("Frame")
 	titleIconHolder.BackgroundTransparency = 1
 	titleIconHolder.Position = UDim2.new(0, 8, 0, 4)
-	titleIconHolder.Size = UDim2.fromOffset(36, 36)
+	titleIconHolder.Size = UDim2.fromOffset(72, 72)
 	titleIconHolder.ZIndex = 6
 	titleIconHolder.Parent = Topbar
-	Library.GetLogo(titleIconHolder, 36, Theme.Cyan)
+	Library.GetLogo(titleIconHolder, 72, Theme.Cyan)
 
 	local Title = Instance.new("TextLabel")
 	Title.BackgroundTransparency = 1
@@ -494,10 +490,10 @@ function Library.CreateWindow(opts)
 	launcherIconHolder.BackgroundTransparency = 1
 	launcherIconHolder.AnchorPoint = Vector2.new(0.5, 0.5)
 	launcherIconHolder.Position = UDim2.fromScale(0.5, 0.5)
-	launcherIconHolder.Size = UDim2.fromOffset(36, 36)
+	launcherIconHolder.Size = UDim2.fromOffset(72, 72)
 	launcherIconHolder.ZIndex = 11
 	launcherIconHolder.Parent = Launcher
-	Library.GetLogo(launcherIconHolder, 36, Theme.Cyan)
+	Library.GetLogo(launcherIconHolder, 72, Theme.Cyan)
 
 	local windowVisible = true
 	local function setWindowVisible(visible, animate)
@@ -2065,10 +2061,10 @@ function Library.CreateLoader(config)
 	local logoHolder = Instance.new("Frame")
 	logoHolder.BackgroundTransparency = 1
 	logoHolder.Position = UDim2.new(0, 8, 0, 4)
-	logoHolder.Size = UDim2.fromOffset(36, 36)
+	logoHolder.Size = UDim2.fromOffset(72, 72)
 	logoHolder.ZIndex = 5
 	logoHolder.Parent = Topbar
-	Library.GetLogo(logoHolder, 36, Theme.Cyan)
+	Library.GetLogo(logoHolder, 72, Theme.Cyan)
 
 	local titleLabel = Instance.new("TextLabel")
 	titleLabel.BackgroundTransparency = 1
