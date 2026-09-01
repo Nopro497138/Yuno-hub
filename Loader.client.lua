@@ -28,17 +28,11 @@ local Library = require(script.Parent:WaitForChild("YunoHubLibrary"))
 local Hubs = script.Parent:WaitForChild("Hubs")
 
 local Instances = {
-	{
-		Name = "Yuno Hub",
-		Image = "sparkles",
-		Description = "The main hub with Home, Presets, Stats and Settings.",
-		Module = Hubs:WaitForChild("YunoHub"),
-	},
-	{
-		Name = "Second Instance",
-		Image = "skull",
-		Description = "Example of a second, independent hub in the same selection list.",
-		Module = Hubs:WaitForChild("SecondInstance"),
+{
+		Name = "Stay Inside",
+		Image = "rbxassetid://77009249529372",
+		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
+		Module = Hubs:WaitForChild("StayInside"),
 	},
 	-- Add your own instances here:
 	-- {
