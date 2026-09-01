@@ -40,6 +40,13 @@ local Instances = {
 		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more!",
 		Module = Hubs:WaitForChild("BonkBlock"),
 	},
+	{
+		Name = "RUNAWAYS",
+		Image = "rbxassetid://102352181233660",
+		Description = "Script for RUNAWAYS! Has Auto collect, ESP, Car mods and more!",
+		Module = Hubs:WaitForChild("BonkBlock"),
+		AutoLoad = { PlaceIds = { 117311404196294 } }
+	},
 	-- Add your own instances here:
 	-- {
 	-- 	Name = "My Hub",
