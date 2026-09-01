@@ -883,7 +883,7 @@ return function(Library)
 
     local farmSection = farmTab:CreateSection(
         "SuperMarket Farm",
-        "Automatisches Aufheben und Abgeben der Objekte."
+        "Automatically pick up and deliver objects."
     )
 
     farmSection:CreateToggle(
@@ -894,10 +894,10 @@ return function(Library)
 
             if value then
                 startFarm()
-                notify("Auto Farm", "Gestartet.", 2.5, "zap")
+                notify("Auto Farm", "Started.", 2.5, "zap")
             else
                 stopFarm()
-                notify("Auto Farm", "Gestoppt.", 2.5, "power")
+                notify("Auto Farm", "Stopped.", 2.5, "power")
             end
         end,
         "autoFarm"
@@ -909,7 +909,7 @@ return function(Library)
             processedModels = {}
             notify(
                 "Auto Farm",
-                "Alle bisher ignorierten Objekte wurden zurückgesetzt.",
+                "All previously ignored objects have been reset.",
                 3,
                 "save"
             )
@@ -920,7 +920,7 @@ return function(Library)
     farmInfo:CreateLabel("Collection: (-382, 10, -408)")
     farmInfo:CreateLabel("Delivery: (-427, 202, 54)")
     farmInfo:CreateLabel("Pickup: ProximityPrompt → Z fallback")
-    farmInfo:CreateLabel("Die Kamera wird während des Pickups automatisch auf das Objekt gerichtet.")
+    farmInfo:CreateLabel("The camera will automatically focus on the object during pickup.")
 
     -- ============================================================
     -- TAB: Player
@@ -938,9 +938,9 @@ return function(Library)
 
             if value then
                 applyInfiniteHealth()
-                notify("Infinite Health", "Aktiviert.", 2, "heart")
+                notify("Infinite Health", "Enabled.", 2, "heart")
             else
-                notify("Infinite Health", "Deaktiviert.", 2, "shield")
+                notify("Infinite Health", "Disabled.", 2, "shield")
             end
         end,
         "infiniteHealth"
@@ -963,7 +963,7 @@ return function(Library)
         function()
             State.WalkSpeed = 16
             applyWalkSpeed()
-            notify("Player", "WalkSpeed auf 16 gesetzt.", 2, "user")
+            notify("Player", "WalkSpeed set to 16.", 2, "user")
         end
     )
 
@@ -975,7 +975,7 @@ return function(Library)
 
     local objectSection = objectTab:CreateSection(
         "SuperMarket Objects",
-        "ESP für Objekte im SuperMarket/Plots/Models Ordner."
+        "ESP for objects in the SuperMarket/Plots/Models folder."
     )
 
     objectSection:CreateToggle(
@@ -986,9 +986,9 @@ return function(Library)
 
             if value then
                 scanObjects()
-                notify("Object ESP", "Aktiviert.", 2.5, "eye")
+                notify("Object ESP", "Enabled.", 2.5, "eye")
             else
-                notify("Object ESP", "Deaktiviert.", 2.5, "eye")
+                notify("Object ESP", "Disabled.", 2.5, "eye")
             end
         end,
         "objectESP"
@@ -1027,7 +1027,7 @@ return function(Library)
         "Refresh Objects",
         function()
             scanObjects()
-            notify("Object ESP", "Objekte neu gescannt.", 2, "wrench")
+            notify("Object ESP", "Objects rescanned.", 2, "wrench")
         end
     )
 
@@ -1039,7 +1039,7 @@ return function(Library)
 
     local espSection = espTab:CreateSection(
         "Player ESP",
-        "Drawing-ESP mit Name, Box, Healthbar, Distance, Tracer und Skeleton."
+        "Drawing ESP with Name, Box, Healthbar, Distance, Tracer, and Skeleton."
     )
 
     espSection:CreateToggle(
@@ -1052,7 +1052,7 @@ return function(Library)
                 State.PlayerESP = false
                 notify(
                     "Player ESP",
-                    "Dein Executor stellt keine Drawing API bereit.",
+                    "Your executor does not provide a Drawing API.",
                     4,
                     "shield"
                 )
@@ -1061,7 +1061,7 @@ return function(Library)
 
             notify(
                 "Player ESP",
-                value and "Aktiviert." or "Deaktiviert.",
+                value and "Enabled." or "Disabled.",
                 2.5,
                 "eye"
             )
@@ -1154,12 +1154,12 @@ return function(Library)
                 updatePlayerESP()
             end
 
-            notify("Player ESP", "ESP neu aufgebaut.", 2, "wrench")
+            notify("Player ESP", "ESP rebuilt.", 2, "wrench")
         end
     )
 
     if not DrawingAvailable then
-        espSection:CreateLabel("Hinweis: Skeleton/Box/Tracer benötigen Drawing API.")
+        espSection:CreateLabel("Note: Skeleton/Box/Tracer require Drawing API.")
     end
 
     -- ============================================================
@@ -1170,17 +1170,17 @@ return function(Library)
 
     local presetsSection = presetsTab:CreateSection(
         "Preset Manager",
-        "Speichert alle geflaggten Toggles und Slider."
+        "Saves all flagged toggles and sliders."
     )
 
     presetsSection:CreatePresetManager()
 
-    local presetHelp = presetsTab:CreateSection("Beispiel-Presets")
+    local presetHelp = presetsTab:CreateSection("Example Presets")
     presetHelp:CreateButton(
         "Save: AFK Farm",
         function()
             Window:SavePreset("AFK Farm")
-            notify("Preset", "AFK Farm gespeichert.", 2.5, "save")
+            notify("Preset", "AFK Farm saved.", 2.5, "save")
         end
     )
 
@@ -1188,7 +1188,7 @@ return function(Library)
         "Save: Object Hunt",
         function()
             Window:SavePreset("Object Hunt")
-            notify("Preset", "Object Hunt gespeichert.", 2.5, "save")
+            notify("Preset", "Object Hunt saved.", 2.5, "save")
         end
     )
 
@@ -1196,7 +1196,7 @@ return function(Library)
         "Save: Player ESP",
         function()
             Window:SavePreset("Player ESP")
-            notify("Preset", "Player ESP gespeichert.", 2.5, "save")
+            notify("Preset", "Player ESP saved.", 2.5, "save")
         end
     )
 
@@ -1215,7 +1215,7 @@ return function(Library)
             State.ObjectESP = false
             State.PlayerESP = false
 
-            notify("Utility", "AutoFarm + ESP gestoppt.", 3, "power")
+            notify("Utility", "AutoFarm + ESP stopped.", 3, "power")
         end
     )
 
@@ -1223,7 +1223,7 @@ return function(Library)
         "Clear ESP",
         function()
             clearAllESP()
-            notify("ESP", "Alle ESP-Objekte gelöscht.", 2.5, "skull")
+            notify("ESP", "All ESP objects cleared.", 2.5, "skull")
         end
     )
 
@@ -1239,8 +1239,8 @@ return function(Library)
 
     miscSection:CreateLabel(
         DrawingAvailable
-            and "Drawing API: verfügbar"
-            or "Drawing API: nicht verfügbar"
+            and "Drawing API: available"
+            or "Drawing API: unavailable"
     )
 
     return Window
