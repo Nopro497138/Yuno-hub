@@ -31,10 +31,16 @@ local Library = fetchLibrary()
 
 local Instances = {
 	{
-		Name = "Stay Inside",
+		Name = "STAY INSIDE",
 		Image = "rbxassetid://77009249529372",
 		Description = "Script for STAY INSIDE, has autofarm, ESP and more!",
 		Url = RAW_BASE .. "Hubs/StayInside.lua",
+	},
+	{
+		Name = "BONK & BLOCK",
+		Image = "rbxassetid://97173577563395",
+		Description = "Script for BONK & BLOCK! Has ESP, Aimbot and more!",
+		Url = RAW_BASE .. "Hubs/BonkBlock.lua",
 	},
 	-- Add your own instances here:
 	-- {
