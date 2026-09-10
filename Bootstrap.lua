@@ -49,6 +49,13 @@ local Instances = {
 		Url = RAW_BASE .. "Hubs/runaways.lua",
 		AutoLoad = { PlaceIds = { 117311404196294 } }
 	},
+	{
+		Name = "+! WINGS KEYBOARD ESCAPE",
+		Image = "rbxassetid://100064308963552",
+		Description = "Script for +1 WINGS KEYBOARD ESCAPE! Has Auto farm wins, auto farm speed, and more! STATUS: DONE!",
+		Url = RAW_BASE .. "Hubs/WingsKeyboardEscape.lua",
+		AutoLoad = { PlaceIds = { 129801978352079 } }
+	},
 	-- Add your own instances here:
 	-- {
 	-- 	Name = "My Hub",
