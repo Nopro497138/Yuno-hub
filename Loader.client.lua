@@ -44,8 +44,15 @@ local Instances = {
 		Name = "RUNAWAYS",
 		Image = "rbxassetid://102352181233660",
 		Description = "Script for RUNAWAYS! Has Auto collect, ESP, Car mods and more!",
-		Module = Hubs:WaitForChild("BonkBlock"),
+		Module = Hubs:WaitForChild("Runaways"),
 		AutoLoad = { PlaceIds = { 117311404196294 } }
+	},
+	{
+		Name = "+! WINGS KEYBOARD ESCAPE",
+		Image = "rbxassetid://100064308963552",
+		Description = "Script for +1 WINGS KEYBOARD ESCAPE! Has Auto farm wins, auto farm speed, and more! STATUS: DONE!",
+		Module = Hubs:WaitForChild("WingsKeyboardEscape"),
+		AutoLoad = { PlaceIds = { 129801978352079 } }
 	},
 	-- Add your own instances here:
 	-- {
